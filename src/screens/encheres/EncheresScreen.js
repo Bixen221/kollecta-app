@@ -16,11 +16,11 @@ const getTempsRestant = (fin_le) => {
   return `${h}h ${m}m`;
 };
 
-export default function EncheresScreen() {
-  const [encheres,  setEncheres]  = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [refreshing,setRefreshing]= useState(false);
-  const [filtre,    setFiltre]    = useState('Tout');
+export default function EncheresScreen({ navigation }) {
+  const [encheres,   setEncheres]   = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtre,     setFiltre]     = useState('Tout');
 
   const filtres = ['Tout', 'En cours', 'À venir', 'Terminées'];
 
@@ -62,11 +62,17 @@ export default function EncheresScreen() {
             {encheres.length === 0
               ? <Text style={styles.vide}>Aucune enchère disponible.</Text>
               : encheres.map(e => (
-                <View key={e.id} style={styles.card}>
+                <TouchableOpacity
+                  key={e.id}
+                  style={styles.card}
+                  onPress={() => navigation.navigate('DetailEnchere', { enchereId: e.id })}
+                >
                   <View style={styles.cardImg}>
                     <Text style={{ fontSize: 40 }}>📦</Text>
                     <View style={[styles.badge, e.statut === 'en_cours' && styles.badgeLive]}>
-                      <Text style={styles.badgeTxt}>{e.statut === 'en_cours' ? '🔴 EN DIRECT' : e.statut === 'a_venir' ? 'À venir' : 'Terminée'}</Text>
+                      <Text style={styles.badgeTxt}>
+                        {e.statut === 'en_cours' ? '🔴 EN DIRECT' : e.statut === 'a_venir' ? 'À venir' : 'Terminée'}
+                      </Text>
                     </View>
                     {e.statut === 'en_cours' && (
                       <View style={styles.timer}>
@@ -82,12 +88,14 @@ export default function EncheresScreen() {
                         <Text style={styles.prix}>{e.offre_actuelle?.toLocaleString()} FCFA</Text>
                         <Text style={styles.cardSous}>🙋 {e.nb_offres} enchères</Text>
                       </View>
-                      <TouchableOpacity style={styles.btnEncherir}>
-                        <Text style={styles.btnEncherirTxt}>{e.statut === 'en_cours' ? 'Enchérir →' : 'Voir'}</Text>
-                      </TouchableOpacity>
+                      <View style={styles.btnEncherir}>
+                        <Text style={styles.btnEncherirTxt}>
+                          {e.statut === 'en_cours' ? 'Enchérir →' : 'Voir'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             }
             <View style={{ height: 20 }} />
