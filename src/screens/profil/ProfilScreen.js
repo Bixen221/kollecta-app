@@ -14,75 +14,102 @@ export default function ProfilScreen({ navigation }) {
     ]);
   };
 
-  const MenuItem = ({ ico, titre, sous, onPress, right }) => (
-    <TouchableOpacity style={[styles.mi, { backgroundColor: theme.card, borderBottomColor: theme.bd }]} onPress={onPress}>
-      <View style={[styles.mic, { backgroundColor: theme.card2 }]}>
+  const MenuItem = ({ ico, titre, sous, onPress, right, badge }) => (
+    <TouchableOpacity
+      style={{ flexDirection: 'row', alignItems: 'center', padding: 14, paddingHorizontal: 16, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.bd }}
+      onPress={onPress}
+    >
+      <View style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: theme.card2, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
         <Text style={{ fontSize: 16 }}>{ico}</Text>
       </View>
-      <View style={styles.mtx}>
-        <Text style={[styles.mt, { color: theme.txt }]}>{titre}</Text>
-        {sous && <Text style={[styles.ms, { color: theme.txt2 }]}>{sous}</Text>}
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.txt }}>{titre}</Text>
+        {sous && <Text style={{ fontSize: 11, color: theme.txt2, marginTop: 1 }}>{sous}</Text>}
       </View>
-      {right || <Text style={[styles.marr, { color: theme.txt3 }]}>›</Text>}
+      {badge && (
+        <View style={{ backgroundColor: theme.bord, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20, marginRight: 8 }}>
+          <Text style={{ fontSize: 10, fontWeight: '700', color: 'white' }}>{badge}</Text>
+        </View>
+      )}
+      {right || <Text style={{ fontSize: 18, color: theme.txt3 }}>›</Text>}
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]}>
+    <ScrollView style={{ flex: 1, backgroundColor: theme.bg }}>
       {/* HEADER */}
-      <View style={[styles.ph, { backgroundColor: theme.hdr, borderBottomColor: theme.bd }]}>
-        <Text style={[styles.logo, { color: theme.or }]}>KOLLECTA</Text>
-        <View style={[styles.pav, { backgroundColor: theme.card2, borderColor: theme.or }]}>
-          <Text style={[styles.pavTxt, { color: theme.or }]}>
-            {user?.prenom?.[0]}{user?.nom?.[0]}
-          </Text>
+      <View style={{ backgroundColor: theme.hdr, padding: 24, paddingTop: 50, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.bd }}>
+        <Text style={{ fontSize: 18, fontWeight: '800', color: theme.or, letterSpacing: 2, marginBottom: 16 }}>KOLLECTA</Text>
+        <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.or, justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+          <Text style={{ fontSize: 24, fontWeight: '800', color: theme.or }}>{user?.prenom?.[0]}{user?.nom?.[0]}</Text>
         </View>
-        <Text style={[styles.pn, { color: theme.or }]}>{user?.prenom} {user?.nom}</Text>
-        <Text style={[styles.pl, { color: theme.txt2 }]}>📍 {user?.quartier || 'Dakar'}</Text>
-        <View style={[styles.pbdg, { backgroundColor: theme.orl, borderColor: theme.bd }]}>
-          <Text style={[styles.pbdgTxt, { color: theme.or }]}>
+        <Text style={{ fontSize: 18, fontWeight: '800', color: theme.or }}>{user?.prenom} {user?.nom}</Text>
+        <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 3 }}>📍 {user?.quartier || 'Dakar'}</Text>
+        <View style={{ backgroundColor: theme.orl, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 8, borderWidth: 1, borderColor: theme.bd }}>
+          <Text style={{ fontSize: 10, fontWeight: '600', color: theme.or }}>
             {user?.verifie ? '✅ Compte vérifié' : '⏳ Non vérifié'} · Membre Kollecta
           </Text>
         </View>
       </View>
 
       {/* STATS */}
-      <View style={[styles.pst, { backgroundColor: theme.bd, marginHorizontal: 16, marginVertical: 14, borderRadius: 14, overflow: 'hidden' }]}>
+      <View style={{ flexDirection: 'row', margin: 16, backgroundColor: theme.bd, borderRadius: 14, overflow: 'hidden', gap: 1 }}>
         {[
-          [user?.nb_dons || 0, 'Dons faits'],
-          [user?.note_moyenne || '0.0', 'Note ⭐'],
-          [0, 'Enchères'],
+          [user?.nb_dons || 0,        'Dons faits'],
+          [user?.note_moyenne || '0', 'Note ⭐'],
+          [0,                          'Enchères'],
         ].map(([n, l]) => (
-          <View key={l} style={[styles.psc, { backgroundColor: theme.card }]}>
-            <Text style={[styles.psn, { color: theme.bord }]}>{n}</Text>
-            <Text style={[styles.psl, { color: theme.txt2 }]}>{l}</Text>
+          <View key={l} style={{ flex: 1, padding: 12, alignItems: 'center', backgroundColor: theme.card }}>
+            <Text style={{ fontSize: 17, fontWeight: '800', color: theme.bord }}>{n}</Text>
+            <Text style={{ fontSize: 10, color: theme.txt2, marginTop: 2 }}>{l}</Text>
           </View>
         ))}
       </View>
 
       {/* ACTIVITE */}
-      <View style={[styles.secLbl, { backgroundColor: theme.bg }]}>
-        <Text style={[styles.secLblTxt, { color: theme.txt3 }]}>MON ACTIVITÉ</Text>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.bg }}>
+        <Text style={{ fontSize: 10, fontWeight: '700', color: theme.txt3, letterSpacing: 0.5 }}>MON ACTIVITÉ</Text>
       </View>
-      <MenuItem ico="🎁" titre="Mes dons publiés"   sous="Gérer mes annonces" />
-      <MenuItem ico="📋" titre="Mes réservations"   sous="Suivre mes demandes" />
-      <MenuItem ico="🔨" titre="Mes enchères"       sous="Voir mes enchères" />
-      <MenuItem ico="💬" titre="Messages"           sous="Conversations actives" />
+      <MenuItem
+        ico="🎁"
+        titre="Mes dons publiés"
+        sous="Gérer mes annonces actives"
+        onPress={() => navigation.navigate('MesDons')}
+      />
+      <MenuItem
+        ico="📋"
+        titre="Mes réservations"
+        sous="Suivre mes demandes de dons"
+        onPress={() => navigation.navigate('MesReservations')}
+      />
+      <MenuItem
+        ico="🔨"
+        titre="Mes enchères"
+        sous="Voir mes enchères en cours"
+        onPress={() => {}}
+      />
+      <MenuItem
+        ico="💬"
+        titre="Messages"
+        sous="Conversations actives"
+        badge="4"
+        onPress={() => {}}
+      />
 
       {/* COMPTE */}
-      <View style={[styles.secLbl, { backgroundColor: theme.bg, marginTop: 8 }]}>
-        <Text style={[styles.secLblTxt, { color: theme.txt3 }]}>MON COMPTE</Text>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.bg, marginTop: 8 }}>
+        <Text style={{ fontSize: 10, fontWeight: '700', color: theme.txt3, letterSpacing: 0.5 }}>MON COMPTE</Text>
       </View>
-      <MenuItem ico="✏️" titre="Modifier mon profil" />
+      <MenuItem ico="✏️" titre="Modifier mon profil" onPress={() => {}} />
 
       {/* TOGGLE THEME */}
-      <View style={[styles.mi, { backgroundColor: theme.card, borderBottomColor: theme.bd }]}>
-        <View style={[styles.mic, { backgroundColor: theme.card2 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14, paddingHorizontal: 16, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.bd }}>
+        <View style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: theme.card2, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
           <Text style={{ fontSize: 16 }}>{isDark ? '🌙' : '☀️'}</Text>
         </View>
-        <View style={styles.mtx}>
-          <Text style={[styles.mt, { color: theme.txt }]}>{isDark ? 'Mode sombre' : 'Mode clair'}</Text>
-          <Text style={[styles.ms, { color: theme.txt2 }]}>Changer l'apparence</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: theme.txt }}>{isDark ? 'Mode sombre' : 'Mode clair'}</Text>
+          <Text style={{ fontSize: 11, color: theme.txt2, marginTop: 1 }}>Changer l'apparence</Text>
         </View>
         <Switch
           value={isDark}
@@ -92,15 +119,15 @@ export default function ProfilScreen({ navigation }) {
         />
       </View>
 
-      <MenuItem ico="⚙️" titre="Paramètres" sous="Notifications, confidentialité" />
+      <MenuItem ico="⚙️" titre="Paramètres" sous="Notifications, confidentialité" onPress={() => {}} />
 
       {/* DECONNEXION */}
       <View style={{ padding: 16, marginTop: 8 }}>
         <TouchableOpacity
-          style={[styles.decoBtnOuter, { backgroundColor: theme.card, borderColor: '#FFCDD2' }]}
+          style={{ backgroundColor: theme.card, borderWidth: 1, borderColor: '#FFCDD2', borderRadius: 12, padding: 14, alignItems: 'center' }}
           onPress={handleDeconnexion}
         >
-          <Text style={styles.decoTxt}>Se déconnecter</Text>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: '#CC2222' }}>Se déconnecter</Text>
         </TouchableOpacity>
       </View>
 
@@ -108,29 +135,3 @@ export default function ProfilScreen({ navigation }) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container:    { flex: 1 },
-  ph:           { padding: 24, paddingTop: 50, alignItems: 'center', borderBottomWidth: 1 },
-  logo:         { fontSize: 18, fontWeight: '800', letterSpacing: 2, marginBottom: 16 },
-  pav:          { width: 68, height: 68, borderRadius: 34, borderWidth: 2, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  pavTxt:       { fontSize: 24, fontWeight: '800' },
-  pn:           { fontSize: 18, fontWeight: '800' },
-  pl:           { fontSize: 12, marginTop: 3 },
-  pbdg:         { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 8, borderWidth: 1 },
-  pbdgTxt:      { fontSize: 10, fontWeight: '600' },
-  pst:          { display: 'flex', flexDirection: 'row', gap: 1 },
-  psc:          { flex: 1, padding: 12, alignItems: 'center' },
-  psn:          { fontSize: 17, fontWeight: '800' },
-  psl:          { fontSize: 10, marginTop: 2 },
-  secLbl:       { paddingHorizontal: 16, paddingVertical: 8 },
-  secLblTxt:    { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  mi:           { flexDirection: 'row', alignItems: 'center', padding: 14, paddingHorizontal: 16, borderBottomWidth: 1 },
-  mic:          { width: 34, height: 34, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  mtx:          { flex: 1 },
-  mt:           { fontSize: 14, fontWeight: '600' },
-  ms:           { fontSize: 11, marginTop: 1 },
-  marr:         { fontSize: 18 },
-  decoBtnOuter: { borderWidth: 1, borderRadius: 12, padding: 14, alignItems: 'center' },
-  decoTxt:      { fontSize: 14, fontWeight: '700', color: '#CC2222' },
-});
