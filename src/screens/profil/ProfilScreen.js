@@ -89,6 +89,12 @@ export default function ProfilScreen({ navigation }) {
         onPress={() => {}}
       />
       <MenuItem
+        ico="🔔"
+        titre="Notifications"
+        sous="Vos alertes et mises à jour"
+        onPress={() => navigation.navigate('Notifications')}
+      />
+      <MenuItem
         ico="💬"
         titre="Messages"
         sous="Conversations actives"

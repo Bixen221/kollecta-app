@@ -55,9 +55,10 @@ export default function AccueilScreen({ navigation }) {
             <Text style={[s.hdrSous, { color: theme.txt2 }]}>📍 Dakar, Sénégal</Text>
             <Text style={[s.logo, { color: theme.or }]}>KOLLECTA</Text>
           </View>
-          <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}>
-            <Text style={{ fontSize: 18 }}>🔔</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}
+onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
+  <Text style={{ fontSize: 18 }}>🔔</Text>
+</TouchableOpacity>
         </View>
 
         {/* BARRE DE RECHERCHE */}

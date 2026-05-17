@@ -20,6 +20,7 @@ import PublierEnchereScreen    from '../screens/encheres/PublierEnchereScreen';
 import ProfilScreen            from '../screens/profil/ProfilScreen';
 import MesDonsScreen           from '../screens/profil/MesDonsScreen';
 import MesReservationsScreen   from '../screens/profil/MesReservationsScreen';
+import NotificationsScreen     from '../screens/profil/NotificationsScreen';
 
 const Tab   = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -52,6 +53,7 @@ const ProfilStack = () => (
     <Stack.Screen name="ProfilHome"      component={ProfilScreen} />
     <Stack.Screen name="MesDons"         component={MesDonsScreen} />
     <Stack.Screen name="MesReservations" component={MesReservationsScreen} />
+    <Stack.Screen name="Notifications"   component={NotificationsScreen} />
   </Stack.Navigator>
 );
 
