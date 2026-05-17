@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, Image } from 'react-native';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -101,7 +101,10 @@ export default function EncheresScreen({ navigation }) {
                   onPress={() => navigation.navigate('DetailEnchere', { enchereId: e.id })}
                 >
                   <View style={{ height: 130, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, position: 'relative' }}>
-                    <Text style={{ fontSize: 44 }}>📦</Text>
+                    {e.photos && e.photos[0]
+                      ? <Image source={{ uri: e.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      : <Text style={{ fontSize: 44 }}>📦</Text>
+                    }
                     <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: e.statut === 'en_cours' ? theme.bord : theme.card, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: theme.bd }}>
                       <Text style={{ fontSize: 10, fontWeight: '700', color: e.statut === 'en_cours' ? 'white' : theme.or }}>
                         {e.statut === 'en_cours' ? '🔴 EN DIRECT' : e.statut === 'a_venir' ? 'À venir' : 'Terminée'}

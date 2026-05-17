@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Image } from 'react-native';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useReservations } from '../../context/ReservationsContext';
@@ -66,7 +66,10 @@ export default function MesReservationsScreen({ navigation }) {
     return (
       <View style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: theme.bd }}>
         <View style={{ height: 70, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, position: 'relative' }}>
-          <Text style={{ fontSize: 28 }}>{resa.type === 'nourriture' ? '🍱' : '📦'}</Text>
+        {resa.photos && resa.photos[0]
+          ? <Image source={{ uri: resa.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          : <Text style={{ fontSize: 28 }}>{resa.type === 'nourriture' ? '🍱' : '📦'}</Text>
+        }
         </View>
         <View style={{ padding: 12 }}>
           <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 4 }} numberOfLines={1}>{resa.titre}</Text>

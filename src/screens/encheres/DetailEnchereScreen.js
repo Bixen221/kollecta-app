@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, Modal, TextInput, Animated,
-  KeyboardAvoidingView, Platform
+  KeyboardAvoidingView, Platform, Image
 } from 'react-native';
 import { io } from 'socket.io-client';
 import api from '../../services/api';
@@ -144,7 +144,10 @@ export default function DetailEnchereScreen({ route, navigation }) {
     <View style={styles.container}>
       <ScrollView>
         <View style={styles.img}>
-          <Text style={styles.imgEmoji}>📦</Text>
+          {enchere?.photos && enchere?.photos[0]
+            ? <Image source={{ uri: enchere.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={styles.imgEmoji}>📦</Text>
+          }
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.backTxt}>← Retour</Text>
           </TouchableOpacity>

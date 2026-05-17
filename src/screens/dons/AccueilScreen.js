@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, TextInput, Image } from 'react-native';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -122,7 +122,10 @@ onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
                 onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
               >
                 <View style={[s.cardImg, { backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE' }]}>
-                  <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+  {don.photos && don.photos[0]
+    ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+    : <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+  }
                   {reserve && (
                     <View style={s.reserveTag}><Text style={s.reserveTagTxt}>✓ Réservé</Text></View>
                   )}
@@ -164,7 +167,10 @@ onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
               onPress={() => navigation.navigate('DetailEnchere', { enchereId: e.id })}
             >
               <View style={[s.cardImg, { backgroundColor: '#2A1E18' }]}>
-                <Text style={{ fontSize: 36 }}>📦</Text>
+  {e.photos && e.photos[0]
+    ? <Image source={{ uri: e.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+    : <Text style={{ fontSize: 36 }}>📦</Text>
+  }
                 <View style={[s.liveBadge, { backgroundColor: theme.bord }]}>
                   <Text style={s.liveBadgeTxt}>🔴 DIRECT</Text>
                 </View>

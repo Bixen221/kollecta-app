@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Image } from 'react-native';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -43,7 +43,10 @@ export default function MesDonsScreen({ navigation }) {
     return (
       <View style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1.5, borderColor: don.statut === 'cloture' ? theme.gr : theme.or }}>
         <View style={{ height: 80, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE' }}>
-          <Text style={{ fontSize: 32 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+          {don.photos && don.photos[0]
+            ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={{ fontSize: 32 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+          }
         </View>
         <View style={{ padding: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -98,7 +101,6 @@ export default function MesDonsScreen({ navigation }) {
         <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>{actifs.length} actifs · {clotures.length} complétés</Text>
       </View>
 
-      {/* ONGLETS */}
       <View style={{ flexDirection: 'row', backgroundColor: theme.hdr, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: theme.bd }}>
         {[['actifs', 'Actifs ('+actifs.length+')'], ['clotures', 'Complétés ('+clotures.length+')']].map(([key, label]) => (
           <TouchableOpacity

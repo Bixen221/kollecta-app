@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, Modal
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal, Image } from 'react-native';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -90,7 +87,10 @@ export default function DetailDonScreen({ route, navigation }) {
       <ScrollView>
         {/* IMAGE */}
         <View style={[styles.img, { backgroundColor: don?.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE' }]}>
-          <Text style={styles.imgEmoji}>{don?.type === 'nourriture' ? '🍱' : '📦'}</Text>
+  {don?.photos && don?.photos[0]
+    ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+    : <Text style={styles.imgEmoji}>{don?.type === 'nourriture' ? '🍱' : '📦'}</Text>
+  }
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.backTxt}>← Retour</Text>
           </TouchableOpacity>
