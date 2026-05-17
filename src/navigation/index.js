@@ -3,18 +3,19 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { ActivityIndicator, View } from 'react-native';
 
-import SplashScreen          from '../screens/auth/SplashScreen';
-import ConnexionScreen       from '../screens/auth/ConnexionScreen';
-import InscriptionScreen     from '../screens/auth/InscriptionScreen';
-import AccueilScreen         from '../screens/dons/AccueilScreen';
-import DonsScreen            from '../screens/dons/DonsScreen';
-import DetailDonScreen       from '../screens/dons/DetailDonScreen';
-import EncheresScreen        from '../screens/encheres/EncheresScreen';
-import DetailEnchereScreen   from '../screens/encheres/DetailEnchereScreen';
-import ProfilScreen          from '../screens/profil/ProfilScreen';
+import SplashScreen         from '../screens/auth/SplashScreen';
+import ConnexionScreen      from '../screens/auth/ConnexionScreen';
+import InscriptionScreen    from '../screens/auth/InscriptionScreen';
+import AccueilScreen        from '../screens/dons/AccueilScreen';
+import DonsScreen           from '../screens/dons/DonsScreen';
+import DetailDonScreen      from '../screens/dons/DetailDonScreen';
+import PublierDonScreen     from '../screens/dons/PublierDonScreen';
+import EncheresScreen       from '../screens/encheres/EncheresScreen';
+import DetailEnchereScreen  from '../screens/encheres/DetailEnchereScreen';
+import ProfilScreen         from '../screens/profil/ProfilScreen';
 
 const Tab   = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -25,8 +26,9 @@ const COLORS = {
 
 const DonsStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="ListeDons"    component={DonsScreen} />
-    <Stack.Screen name="DetailDon"    component={DetailDonScreen} />
+    <Stack.Screen name="ListeDons"  component={DonsScreen} />
+    <Stack.Screen name="DetailDon"  component={DetailDonScreen} />
+    <Stack.Screen name="PublierDon" component={PublierDonScreen} />
   </Stack.Navigator>
 );
 
@@ -35,6 +37,7 @@ const AccueilStack = () => (
     <Stack.Screen name="AccueilHome"   component={AccueilScreen} />
     <Stack.Screen name="DetailDon"     component={DetailDonScreen} />
     <Stack.Screen name="DetailEnchere" component={DetailEnchereScreen} />
+    <Stack.Screen name="PublierDon"    component={PublierDonScreen} />
   </Stack.Navigator>
 );
 
@@ -45,7 +48,7 @@ const EncheresStack = () => (
   </Stack.Navigator>
 );
 
-const TabNavigation = () => (
+const TabNavigation = ({ navigation }) => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
@@ -63,15 +66,31 @@ const TabNavigation = () => (
         const icons = {
           Accueil:  focused ? 'home'   : 'home-outline',
           Dons:     focused ? 'gift'   : 'gift-outline',
+          Publier:  'add-circle',
           Enchères: focused ? 'hammer' : 'hammer-outline',
           Profil:   focused ? 'person' : 'person-outline',
         };
+        if (route.name === 'Publier') {
+          return (
+            <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.or, justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
+              <Ionicons name="add" size={28} color={COLORS.dark} />
+            </View>
+          );
+        }
         return <Ionicons name={icons[route.name]} size={22} color={color} />;
       },
     })}
   >
     <Tab.Screen name="Accueil"   component={AccueilStack} />
     <Tab.Screen name="Dons"      component={DonsStack} />
+    <Tab.Screen
+      name="Publier"
+      component={PublierDonScreen}
+      options={{
+        tabBarLabel: 'Publier',
+        tabBarActiveTintColor: COLORS.or,
+      }}
+    />
     <Tab.Screen name="Enchères"  component={EncheresStack} />
     <Tab.Screen name="Profil"    component={ProfilScreen} />
   </Tab.Navigator>
