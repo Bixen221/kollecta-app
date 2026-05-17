@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert, TextInput } from 'react-native';
 import api from '../../services/api';
 import { useReservations } from '../../context/ReservationsContext';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08',
-  light: '#B0A090', bd: 'rgba(201,168,76,0.2)', gr: '#2D7A4F',
-};
+import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function DonsScreen({ navigation }) {
+  const { theme }  = useTheme();
+  const { user }   = useAuth();
   const [dons,       setDons]       = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filtre,     setFiltre]     = useState('Tout');
+  const [recherche,  setRecherche]  = useState('');
   const { estReserve, getReservation, charger: rechargerResas } = useReservations();
 
   const filtres = ['Tout', 'Nourriture', 'Matériels', 'Urgent'];
@@ -24,7 +24,9 @@ export default function DonsScreen({ navigation }) {
       if (filtre === 'Matériels')  params.type = 'materiel';
       if (filtre === 'Urgent')     params.urgent = true;
       const res = await api.get('/dons', { params });
-      setDons(res.dons || []);
+      // Filtrer les publications du proprio
+      const filtered = (res.dons || []).filter(d => d.proprietaire_id !== user?.id);
+      setDons(filtered);
     } catch (err) { console.error(err); }
     finally { setLoading(false); setRefreshing(false); }
   };
@@ -34,87 +36,113 @@ export default function DonsScreen({ navigation }) {
   const handleAnnulerReservation = async (donId) => {
     const resa = getReservation(donId);
     if (!resa) return;
-    Alert.alert(
-      'Annuler la réservation',
-      'Voulez-vous annuler votre réservation pour ce don ?',
-      [
-        { text: 'Non', style: 'cancel' },
-        { text: 'Oui, annuler', style: 'destructive', onPress: async () => {
-          try {
-            await api.post('/dons/reservations/'+resa.id+'/confirmer', { role: 'annuler' });
-            await rechargerResas();
-            charger();
-          } catch (err) {
-            Alert.alert('Erreur', err.message);
-          }
-        }},
-      ]
-    );
+    Alert.alert('Annuler la réservation', 'Voulez-vous annuler votre réservation ?', [
+      { text: 'Non', style: 'cancel' },
+      { text: 'Oui, annuler', style: 'destructive', onPress: async () => {
+        try {
+          await api.post('/dons/reservations/'+resa.id+'/confirmer', { role: 'annuler' });
+          await rechargerResas();
+          charger();
+        } catch (err) { Alert.alert('Erreur', err.message); }
+      }},
+    ]);
   };
 
+  const donsFiltres = dons.filter(d =>
+    d.titre?.toLowerCase().includes(recherche.toLowerCase()) ||
+    d.quartier?.toLowerCase().includes(recherche.toLowerCase()) ||
+    d.categorie?.toLowerCase().includes(recherche.toLowerCase())
+  );
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>KOLLECTA</Text>
-        <Text style={styles.titre}>🎁 Dons</Text>
-        <Text style={styles.sous}>Trouvez un don près de chez vous</Text>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      {/* HEADER */}
+      <View style={{ backgroundColor: theme.hdr, padding: 20, paddingTop: 50 }}>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: theme.or, letterSpacing: 2, marginBottom: 8 }}>KOLLECTA</Text>
+        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt }}>🎁 Dons</Text>
+        <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2, marginBottom: 14 }}>Trouvez un don près de chez vous</Text>
+
+        {/* RECHERCHE */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.card2, borderRadius: 11, padding: 10, borderWidth: 1, borderColor: theme.bd }}>
+          <Text style={{ fontSize: 14, color: theme.txt3 }}>🔍</Text>
+          <TextInput
+            style={{ flex: 1, fontSize: 13, color: theme.txt }}
+            placeholder="Rechercher un don..."
+            placeholderTextColor={theme.txt3}
+            value={recherche}
+            onChangeText={setRecherche}
+          />
+          {recherche.length > 0 && (
+            <TouchableOpacity onPress={() => setRecherche('')}>
+              <Text style={{ fontSize: 14, color: theme.txt3 }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtreBar}>
+      {/* FILTRES */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginVertical: 10, maxHeight: 44 }}>
         {filtres.map(f => (
-          <TouchableOpacity key={f} style={[styles.filtrePill, filtre === f && styles.filtrePillAct]} onPress={() => setFiltre(f)}>
-            <Text style={[styles.filtreTxt, filtre === f && styles.filtreTxtAct]}>{f}</Text>
+          <TouchableOpacity
+            key={f}
+            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: filtre === f ? theme.bord : theme.bd, marginRight: 8, backgroundColor: filtre === f ? theme.bord : theme.card }}
+            onPress={() => setFiltre(f)}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {loading
-        ? <ActivityIndicator size="large" color={COLORS.or} style={{ marginTop: 40 }} />
+        ? <ActivityIndicator size="large" color={theme.or} style={{ marginTop: 40 }} />
         : <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); charger(); rechargerResas(); }} tintColor={COLORS.or} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); charger(); rechargerResas(); }} tintColor={theme.or} />}
           >
-            {dons.length === 0
-              ? <Text style={styles.vide}>Aucun don disponible.</Text>
-              : dons.map(don => {
+            {donsFiltres.length === 0
+              ? <Text style={{ textAlign: 'center', color: theme.txt2, marginTop: 40, fontSize: 14 }}>
+                  {recherche ? 'Aucun résultat pour "'+recherche+'"' : 'Aucun don disponible.'}
+                </Text>
+              : donsFiltres.map(don => {
                 const reserve = estReserve(don.id);
                 return (
                   <TouchableOpacity
                     key={don.id}
-                    style={[styles.card, reserve && styles.cardReserve]}
+                    style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: reserve ? 1.5 : 1, borderColor: reserve ? theme.gr : theme.bd }}
                     onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
                   >
-                    <View style={[styles.cardImg, { backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE' }]}>
+                    <View style={{ height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE', position: 'relative' }}>
                       <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
                       {reserve && (
-                        <View style={styles.reserveTag}>
-                          <Text style={styles.reserveTagTxt}>✓ Réservé</Text>
+                        <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+                          <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>✓ Réservé</Text>
+                        </View>
+                      )}
+                      {don.urgent && (
+                        <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(204,34,34,0.9)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+                          <Text style={{ color: 'white', fontSize: 9, fontWeight: '700' }}>🚨 Urgent</Text>
                         </View>
                       )}
                     </View>
-                    <View style={styles.cardBody}>
-                      <Text style={styles.cardTitre}>{don.titre}</Text>
-                      <Text style={styles.cardSous}>{don.quartier} · {don.ville}</Text>
-                      {reserve && (
-                        <Text style={styles.attenteTxt}>⏳ En attente de contact WhatsApp</Text>
-                      )}
-                      <View style={styles.cardFooter}>
-                        <Text style={styles.cardAuteur}>{don.prenom} {don.nom}</Text>
+                    <View style={{ padding: 12 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 3 }}>{don.titre}</Text>
+                      <Text style={{ fontSize: 11, color: theme.txt2 }}>{don.quartier} · {don.ville}</Text>
+                      {reserve && <Text style={{ fontSize: 11, color: '#4ADE80', marginTop: 4, fontWeight: '600' }}>⏳ En attente de contact WhatsApp</Text>}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                        <Text style={{ fontSize: 12, color: theme.txt2 }}>{don.prenom} {don.nom}</Text>
                         {reserve ? (
                           <TouchableOpacity
-                            style={styles.btnAnnuler}
+                            style={{ backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#FF6B6B' }}
                             onPress={() => handleAnnulerReservation(don.id)}
                           >
-                            <Text style={styles.btnAnnulerTxt}>Annuler</Text>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
                           </TouchableOpacity>
                         ) : (
                           <TouchableOpacity
-                            style={[styles.btnReserver, don.quantite_dispo <= 0 && styles.btnGris]}
+                            style={{ backgroundColor: don.quantite_dispo <= 0 ? '#3A3030' : theme.bord, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 }}
                             onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
                             disabled={don.quantite_dispo <= 0}
                           >
-                            <Text style={styles.btnReserverTxt}>
-                              {don.quantite_dispo <= 0 ? 'Indisponible' : 'Réserver'}
-                            </Text>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>{don.quantite_dispo <= 0 ? 'Indisponible' : 'Réserver'}</Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -129,33 +157,3 @@ export default function DonsScreen({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#0E0A08' },
-  header:         { padding: 20, paddingTop: 50 },
-  logo:           { fontSize: 20, fontWeight: '800', color: '#C9A84C', letterSpacing: 2, marginBottom: 8 },
-  titre:          { fontSize: 22, fontWeight: '800', color: '#F0E8D8' },
-  sous:           { fontSize: 12, color: COLORS.light, marginTop: 2 },
-  filtreBar:      { paddingHorizontal: 16, marginBottom: 12, maxHeight: 44 },
-  filtrePill:     { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd, marginRight: 8, backgroundColor: '#1E1612' },
-  filtrePillAct:  { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  filtreTxt:      { fontSize: 12, fontWeight: '600', color: COLORS.light },
-  filtreTxtAct:   { color: 'white' },
-  vide:           { textAlign: 'center', color: COLORS.light, marginTop: 40, fontSize: 14 },
-  card:           { backgroundColor: '#1E1612', borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.bd },
-  cardReserve:    { borderColor: COLORS.gr, borderWidth: 1.5 },
-  cardImg:        { height: 100, justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  reserveTag:     { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  reserveTagTxt:  { color: 'white', fontSize: 10, fontWeight: '700' },
-  cardBody:       { padding: 12 },
-  cardTitre:      { fontSize: 14, fontWeight: '700', color: '#F0E8D8', marginBottom: 3 },
-  cardSous:       { fontSize: 11, color: COLORS.light },
-  attenteTxt:     { fontSize: 11, color: '#4ADE80', marginTop: 4, fontWeight: '600' },
-  cardFooter:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
-  cardAuteur:     { fontSize: 12, color: COLORS.light },
-  btnReserver:    { backgroundColor: COLORS.bord, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 },
-  btnReserverTxt: { fontSize: 12, fontWeight: '700', color: 'white' },
-  btnAnnuler:     { backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#FF6B6B' },
-  btnAnnulerTxt:  { fontSize: 12, fontWeight: '700', color: '#FF6B6B' },
-  btnGris:        { backgroundColor: '#3A3030' },
-});

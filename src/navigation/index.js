@@ -86,7 +86,7 @@ const TabNavigation = ({ navigation }) => (
       name="Publier"
       component={AccueilStack}
       listeners={{ tabPress: e => { e.preventDefault(); navigation.navigate('ModalPublier'); } }}
-      options={{ tabBarLabel: 'Publier' }}
+      options={{ tabBarLabel: '' }}
     />
     <Tab.Screen name="Enchères"  component={EncheresStack} />
     <Tab.Screen name="Profil"    component={ProfilScreen} />

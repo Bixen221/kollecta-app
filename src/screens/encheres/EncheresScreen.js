@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput } from 'react-native';
 import api from '../../services/api';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08',
-  light: '#B0A090', bd: 'rgba(201,168,76,0.2)',
-};
+import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const getTempsRestant = (fin_le) => {
   const diff = new Date(fin_le) - new Date();
   if (diff <= 0) return 'Terminée';
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
-  if (h > 24) return `${Math.floor(h/24)}j ${h%24}h`;
-  return `${h}h ${m}m`;
+  if (h > 24) return Math.floor(h/24)+'j '+h%24+'h';
+  return h+'h '+m+'m';
 };
 
 export default function EncheresScreen({ navigation }) {
+  const { theme } = useTheme();
+  const { user }  = useAuth();
   const [encheres,   setEncheres]   = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filtre,     setFiltre]     = useState('Tout');
+  const [recherche,  setRecherche]  = useState('');
 
   const filtres = ['Tout', 'En cours', 'À venir', 'Terminées'];
 
@@ -31,65 +31,98 @@ export default function EncheresScreen({ navigation }) {
       if (filtre === 'À venir')   params.statut = 'a_venir';
       if (filtre === 'Terminées') params.statut = 'termine';
       const res = await api.get('/encheres', { params });
-      setEncheres(res.encheres || []);
+      // Filtrer les publications du vendeur
+      const filtered = (res.encheres || []).filter(e => e.vendeur_id !== user?.id);
+      setEncheres(filtered);
     } catch (err) { console.error(err); }
     finally { setLoading(false); setRefreshing(false); }
   };
 
   useEffect(() => { charger(); }, [filtre]);
 
+  const encheresFiltres = encheres.filter(e =>
+    e.titre?.toLowerCase().includes(recherche.toLowerCase()) ||
+    e.quartier?.toLowerCase().includes(recherche.toLowerCase()) ||
+    e.categorie?.toLowerCase().includes(recherche.toLowerCase())
+  );
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>KOLLECTA</Text>
-        <Text style={styles.titre}>🔨 Enchères</Text>
-        <Text style={styles.sous}>Misez sur les meilleures offres</Text>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      {/* HEADER */}
+      <View style={{ backgroundColor: theme.hdr, padding: 20, paddingTop: 50 }}>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: theme.or, letterSpacing: 2, marginBottom: 8 }}>KOLLECTA</Text>
+        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt }}>🔨 Enchères</Text>
+        <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2, marginBottom: 14 }}>Misez sur les meilleures offres</Text>
+
+        {/* RECHERCHE */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.card2, borderRadius: 11, padding: 10, borderWidth: 1, borderColor: theme.bd }}>
+          <Text style={{ fontSize: 14, color: theme.txt3 }}>🔍</Text>
+          <TextInput
+            style={{ flex: 1, fontSize: 13, color: theme.txt }}
+            placeholder="Rechercher une enchère..."
+            placeholderTextColor={theme.txt3}
+            value={recherche}
+            onChangeText={setRecherche}
+          />
+          {recherche.length > 0 && (
+            <TouchableOpacity onPress={() => setRecherche('')}>
+              <Text style={{ fontSize: 14, color: theme.txt3 }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtreBar}>
+      {/* FILTRES */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginVertical: 10, maxHeight: 44 }}>
         {filtres.map(f => (
-          <TouchableOpacity key={f} style={[styles.filtrePill, filtre === f && styles.filtrePillAct]} onPress={() => setFiltre(f)}>
-            <Text style={[styles.filtreTxt, filtre === f && styles.filtreTxtAct]}>{f}</Text>
+          <TouchableOpacity
+            key={f}
+            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: filtre === f ? theme.bord : theme.bd, marginRight: 8, backgroundColor: filtre === f ? theme.bord : theme.card }}
+            onPress={() => setFiltre(f)}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {loading
-        ? <ActivityIndicator size="large" color={COLORS.or} style={{ marginTop: 40 }} />
+        ? <ActivityIndicator size="large" color={theme.or} style={{ marginTop: 40 }} />
         : <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); charger(); }} tintColor={COLORS.or} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); charger(); }} tintColor={theme.or} />}
           >
-            {encheres.length === 0
-              ? <Text style={styles.vide}>Aucune enchère disponible.</Text>
-              : encheres.map(e => (
+            {encheresFiltres.length === 0
+              ? <Text style={{ textAlign: 'center', color: theme.txt2, marginTop: 40, fontSize: 14 }}>
+                  {recherche ? 'Aucun résultat pour "'+recherche+'"' : 'Aucune enchère disponible.'}
+                </Text>
+              : encheresFiltres.map(e => (
                 <TouchableOpacity
                   key={e.id}
-                  style={styles.card}
+                  style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: theme.bd }}
                   onPress={() => navigation.navigate('DetailEnchere', { enchereId: e.id })}
                 >
-                  <View style={styles.cardImg}>
-                    <Text style={{ fontSize: 40 }}>📦</Text>
-                    <View style={[styles.badge, e.statut === 'en_cours' && styles.badgeLive]}>
-                      <Text style={styles.badgeTxt}>
+                  <View style={{ height: 130, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, position: 'relative' }}>
+                    <Text style={{ fontSize: 44 }}>📦</Text>
+                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: e.statut === 'en_cours' ? theme.bord : theme.card, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: theme.bd }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: e.statut === 'en_cours' ? 'white' : theme.or }}>
                         {e.statut === 'en_cours' ? '🔴 EN DIRECT' : e.statut === 'a_venir' ? 'À venir' : 'Terminée'}
                       </Text>
                     </View>
                     {e.statut === 'en_cours' && (
-                      <View style={styles.timer}>
-                        <Text style={styles.timerTxt}>⏱ {getTempsRestant(e.fin_le)}</Text>
+                      <View style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.72)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: theme.or }}>⏱ {getTempsRestant(e.fin_le)}</Text>
                       </View>
                     )}
                   </View>
-                  <View style={styles.cardBody}>
-                    <Text style={styles.cardTitre}>{e.titre}</Text>
-                    <View style={styles.cardFooter}>
+                  <View style={{ padding: 12 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 8 }}>{e.titre}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                       <View>
-                        <Text style={styles.prixLabel}>Offre actuelle</Text>
-                        <Text style={styles.prix}>{e.offre_actuelle?.toLocaleString()} FCFA</Text>
-                        <Text style={styles.cardSous}>🙋 {e.nb_offres} enchères</Text>
+                        <Text style={{ fontSize: 10, color: theme.txt2, marginBottom: 2 }}>Offre actuelle</Text>
+                        <Text style={{ fontSize: 18, fontWeight: '800', color: theme.bord }}>{e.offre_actuelle?.toLocaleString()} FCFA</Text>
+                        <Text style={{ fontSize: 10, color: theme.txt2 }}>🙋 {e.nb_offres} enchères</Text>
                       </View>
-                      <View style={styles.btnEncherir}>
-                        <Text style={styles.btnEncherirTxt}>
+                      <View style={{ backgroundColor: e.statut === 'en_cours' ? theme.bord : theme.txt3, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>
                           {e.statut === 'en_cours' ? 'Enchérir →' : 'Voir'}
                         </Text>
                       </View>
@@ -104,32 +137,3 @@ export default function EncheresScreen({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#0E0A08' },
-  header:        { padding: 20, paddingTop: 50 },
-  logo:          { fontSize: 20, fontWeight: '800', color: '#C9A84C', letterSpacing: 2, marginBottom: 8 },
-  titre:         { fontSize: 22, fontWeight: '800', color: '#F0E8D8' },
-  sous:          { fontSize: 12, color: COLORS.light, marginTop: 2 },
-  filtreBar:     { paddingHorizontal: 16, marginBottom: 12, maxHeight: 44 },
-  filtrePill:    { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd, marginRight: 8, backgroundColor: '#1E1612' },
-  filtrePillAct: { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  filtreTxt:     { fontSize: 12, fontWeight: '600', color: COLORS.light },
-  filtreTxtAct:  { color: 'white' },
-  vide:          { textAlign: 'center', color: COLORS.light, marginTop: 40, fontSize: 14 },
-  card:          { backgroundColor: '#1E1612', borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.bd },
-  cardImg:       { height: 130, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2A1E18', position: 'relative' },
-  badge:         { position: 'absolute', top: 10, left: 10, backgroundColor: '#1A120E', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd },
-  badgeLive:     { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  badgeTxt:      { fontSize: 10, fontWeight: '700', color: COLORS.or },
-  timer:         { position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.75)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20 },
-  timerTxt:      { fontSize: 11, fontWeight: '700', color: COLORS.or },
-  cardBody:      { padding: 12 },
-  cardTitre:     { fontSize: 14, fontWeight: '700', color: '#F0E8D8', marginBottom: 8 },
-  cardSous:      { fontSize: 11, color: COLORS.light },
-  cardFooter:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  prixLabel:     { fontSize: 10, color: COLORS.light, marginBottom: 2 },
-  prix:          { fontSize: 18, fontWeight: '800', color: COLORS.bord },
-  btnEncherir:   { backgroundColor: COLORS.bord, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
-  btnEncherirTxt:{ fontSize: 12, fontWeight: '700', color: 'white' },
-});
