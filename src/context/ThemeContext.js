@@ -14,8 +14,8 @@ export const DARK = {
   inp:      '#160E0A',
   or:       '#C9A84C',
   orl:      'rgba(201,168,76,0.14)',
-  bord:     '#8B1A2A',
-  bordl:    'rgba(139,26,42,0.2)',
+  bord:     '#E05A6A',
+bordl:    'rgba(224,90,106,0.2)',
   gr:       '#2D7A4F',
   grl:      'rgba(45,122,79,0.2)',
   nav:      '#0E0A08',
@@ -43,7 +43,7 @@ export const LIGHT = {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const theme = isDark ? DARK : LIGHT;
   const toggleTheme = () => setIsDark(d => !d);
   return (

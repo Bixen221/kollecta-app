@@ -64,12 +64,15 @@ export default function MesReservationsScreen({ navigation }) {
     const besoinConfirmation = ['confirme_proprio'].includes(resa.statut);
 
     return (
-      <View style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: theme.bd }}>
-        <View style={{ height: 70, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, position: 'relative' }}>
-        {resa.photos && resa.photos[0]
-          ? <Image source={{ uri: resa.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-          : <Text style={{ fontSize: 28 }}>{resa.type === 'nourriture' ? '🍱' : '📦'}</Text>
-        }
+      <TouchableOpacity
+        style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: 1, borderColor: theme.bd }}
+        onPress={() => navigation.navigate('DetailDon', { donId: resa.don_id })}
+      >
+        <View style={{ height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2 }}>
+          {resa.photos && resa.photos[0]
+            ? <Image source={{ uri: resa.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={{ fontSize: 32 }}>{resa.type === 'nourriture' ? '🍱' : '📦'}</Text>
+          }
         </View>
         <View style={{ padding: 12 }}>
           <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 4 }} numberOfLines={1}>{resa.titre}</Text>
@@ -77,7 +80,6 @@ export default function MesReservationsScreen({ navigation }) {
             {resa.quartier} · {resa.ville} · {resa.nom} {resa.prenom}
           </Text>
 
-          {/* STATUT */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: statut.color }}>{statut.label}</Text>
             <Text style={{ fontSize: 10, color: theme.txt3 }}>
@@ -85,7 +87,6 @@ export default function MesReservationsScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* CONFIRMATION REQUISE */}
           {besoinConfirmation && (
             <View style={{ backgroundColor: 'rgba(45,122,79,0.15)', borderRadius: 10, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(45,122,79,0.3)' }}>
               <Text style={{ fontSize: 12, color: '#4ADE80', fontWeight: '600', marginBottom: 6 }}>
@@ -100,7 +101,6 @@ export default function MesReservationsScreen({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{ flex: 1, backgroundColor: theme.card2, borderRadius: 8, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.bd }}
-                  onPress={() => {}}
                 >
                   <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2 }}>✗ Pas encore</Text>
                 </TouchableOpacity>
@@ -108,7 +108,6 @@ export default function MesReservationsScreen({ navigation }) {
             </View>
           )}
 
-          {/* ACTIONS */}
           {!['cloture', 'annule'].includes(resa.statut) && (
             <TouchableOpacity
               style={{ backgroundColor: '#3A1A1A', borderRadius: 9, padding: 9, alignItems: 'center', borderWidth: 1, borderColor: '#FF6B6B' }}
@@ -118,7 +117,7 @@ export default function MesReservationsScreen({ navigation }) {
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -135,7 +134,6 @@ export default function MesReservationsScreen({ navigation }) {
         <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>{enCours.length} en cours · {termines.length} complétées</Text>
       </View>
 
-      {/* ONGLETS */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: theme.hdr, borderBottomWidth: 1, borderBottomColor: theme.bd, maxHeight: 44 }}>
         {[
           ['en_cours',  'En cours ('+enCours.length+')'],

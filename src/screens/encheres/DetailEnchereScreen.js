@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, Modal, TextInput, Animated,
-  KeyboardAvoidingView, Platform, Image
+  KeyboardAvoidingView, Platform
 } from 'react-native';
+import ImageViewer from '../../components/ImageViewer';
 import { io } from 'socket.io-client';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -143,17 +144,17 @@ export default function DetailEnchereScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <View style={styles.img}>
-          {enchere?.photos && enchere?.photos[0]
-            ? <Image source={{ uri: enchere.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-            : <Text style={styles.imgEmoji}>📦</Text>
-          }
+        <ImageViewer
+          photos={enchere?.photos?.filter(Boolean)}
+          style={styles.img}
+          defaultEmoji="📦"
+        >
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.backTxt}>← Retour</Text>
           </TouchableOpacity>
           {estEnCours && <View style={styles.liveTag}><Text style={styles.liveTxt}>🔴 EN DIRECT</Text></View>}
           {connected && <View style={styles.connectedTag}><Text style={styles.connectedTxt}>⚡ Temps reel</Text></View>}
-        </View>
+        </ImageViewer>
 
         <View style={styles.body}>
           <Text style={styles.titre}>{enchere?.titre}</Text>

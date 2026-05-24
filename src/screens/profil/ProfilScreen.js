@@ -94,19 +94,13 @@ export default function ProfilScreen({ navigation }) {
         sous="Vos alertes et mises à jour"
         onPress={() => navigation.navigate('Notifications')}
       />
-      <MenuItem
-        ico="💬"
-        titre="Messages"
-        sous="Conversations actives"
-        badge="4"
-        onPress={() => {}}
-      />
+      <MenuItem ico="💬" titre="Messages" sous="Conversations actives" onPress={() => navigation.navigate('Messages')} />
 
       {/* COMPTE */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.bg, marginTop: 8 }}>
         <Text style={{ fontSize: 10, fontWeight: '700', color: theme.txt3, letterSpacing: 0.5 }}>MON COMPTE</Text>
       </View>
-      <MenuItem ico="✏️" titre="Modifier mon profil" onPress={() => {}} />
+      <MenuItem ico="✏️" titre="Modifier mon profil" onPress={() => navigation.navigate('ModifierProfil')} />
 
       {/* TOGGLE THEME */}
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14, paddingHorizontal: 16, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.bd }}>
@@ -125,7 +119,7 @@ export default function ProfilScreen({ navigation }) {
         />
       </View>
 
-      <MenuItem ico="⚙️" titre="Paramètres" sous="Notifications, confidentialité" onPress={() => {}} />
+      <MenuItem ico="⚙️" titre="Paramètres" sous="Notifications, confidentialité" onPress={() => navigation.navigate('Parametres')} />
 
       {/* DECONNEXION */}
       <View style={{ padding: 16, marginTop: 8 }}>

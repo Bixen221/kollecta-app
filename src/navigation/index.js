@@ -3,26 +3,29 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { View, ActivityIndicator, Modal, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-import SplashScreen            from '../screens/auth/SplashScreen';
-import ConnexionScreen         from '../screens/auth/ConnexionScreen';
-import InscriptionScreen       from '../screens/auth/InscriptionScreen';
-import AccueilScreen           from '../screens/dons/AccueilScreen';
-import DonsScreen              from '../screens/dons/DonsScreen';
-import DetailDonScreen         from '../screens/dons/DetailDonScreen';
-import PublierDonScreen        from '../screens/dons/PublierDonScreen';
-import EncheresScreen          from '../screens/encheres/EncheresScreen';
-import DetailEnchereScreen     from '../screens/encheres/DetailEnchereScreen';
-import PublierEnchereScreen    from '../screens/encheres/PublierEnchereScreen';
-import ProfilScreen            from '../screens/profil/ProfilScreen';
-import MesDonsScreen           from '../screens/profil/MesDonsScreen';
-import MesReservationsScreen   from '../screens/profil/MesReservationsScreen';
-import NotificationsScreen     from '../screens/profil/NotificationsScreen';
+import SplashScreen          from '../screens/auth/SplashScreen';
+import ConnexionScreen       from '../screens/auth/ConnexionScreen';
+import InscriptionScreen     from '../screens/auth/InscriptionScreen';
+import AccueilScreen         from '../screens/dons/AccueilScreen';
+import DonsScreen            from '../screens/dons/DonsScreen';
+import DetailDonScreen       from '../screens/dons/DetailDonScreen';
+import PublierDonScreen      from '../screens/dons/PublierDonScreen';
+import EncheresScreen        from '../screens/encheres/EncheresScreen';
+import DetailEnchereScreen   from '../screens/encheres/DetailEnchereScreen';
+import PublierEnchereScreen  from '../screens/encheres/PublierEnchereScreen';
+import ProfilScreen          from '../screens/profil/ProfilScreen';
+import MesDonsScreen         from '../screens/profil/MesDonsScreen';
+import MesReservationsScreen from '../screens/profil/MesReservationsScreen';
+import NotificationsScreen   from '../screens/profil/NotificationsScreen';
+import ModifierProfilScreen  from '../screens/profil/ModifierProfilScreen';
+import ParametresScreen      from '../screens/profil/ParametresScreen';
+import MessagesScreen        from '../screens/profil/MessagesScreen';
 
-const Tab   = createBottomTabNavigator();
+const Tab  = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const Root  = createStackNavigator();
 
@@ -54,10 +57,15 @@ const ProfilStack = () => (
     <Stack.Screen name="MesDons"         component={MesDonsScreen} />
     <Stack.Screen name="MesReservations" component={MesReservationsScreen} />
     <Stack.Screen name="Notifications"   component={NotificationsScreen} />
+    <Stack.Screen name="DetailDon"       component={DetailDonScreen} />
+    <Stack.Screen name="DetailEnchere"   component={DetailEnchereScreen} />
+    <Stack.Screen name="ModifierProfil"  component={ModifierProfilScreen} />
+    <Stack.Screen name="Parametres"      component={ParametresScreen} />
+    <Stack.Screen name="Messages"        component={MessagesScreen} />
   </Stack.Navigator>
 );
 
-const PublierScreen = () => null;
+const PublierPlaceholder = () => null;
 
 const TabNavigation = ({ navigation }) => {
   const { theme } = useTheme();
@@ -95,7 +103,7 @@ const TabNavigation = ({ navigation }) => {
       <Tab.Screen name="Dons"      component={DonsStack} />
       <Tab.Screen
         name="Publier"
-        component={PublierScreen}
+        component={PublierPlaceholder}
         listeners={{ tabPress: e => { e.preventDefault(); navigation.navigate('ModalPublier'); } }}
         options={{ tabBarLabel: '' }}
       />
@@ -147,9 +155,9 @@ const ModalPublierScreen = ({ navigation }) => {
 
 const MainNavigation = () => (
   <Root.Navigator screenOptions={{ headerShown: false }}>
-    <Root.Screen name="Tabs"          component={TabNavigation} />
-    <Root.Screen name="ModalPublier"  component={ModalPublierScreen} options={{ presentation: 'transparentModal', animation: 'fade' }} />
-    <Root.Screen name="PublierDon"    component={PublierDonScreen}    options={{ animation: 'slide_from_bottom' }} />
+    <Root.Screen name="Tabs"           component={TabNavigation} />
+    <Root.Screen name="ModalPublier"   component={ModalPublierScreen} options={{ presentation: 'transparentModal', animation: 'fade' }} />
+    <Root.Screen name="PublierDon"     component={PublierDonScreen}    options={{ animation: 'slide_from_bottom' }} />
     <Root.Screen name="PublierEnchere" component={PublierEnchereScreen} options={{ animation: 'slide_from_bottom' }} />
   </Root.Navigator>
 );
