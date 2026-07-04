@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, Modal, TextInput, Animated,
   KeyboardAvoidingView, Platform
 } from 'react-native';
-import ImageViewer from '../../components/ImageViewer';
 import { io } from 'socket.io-client';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import * as SecureStore from 'expo-secure-store';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08', dark2: '#1A120E',
-  light: '#B0A090', bd: 'rgba(201,168,76,0.2)',
-};
+import ImageViewer from '../../components/ImageViewer';
 
 const API_URL = 'https://kollecta-backend.onrender.com';
 
@@ -30,7 +26,8 @@ const getTempsRestant = (fin_le) => {
 
 export default function DetailEnchereScreen({ route, navigation }) {
   const { enchereId } = route.params;
-  const { user } = useAuth();
+  const { user }      = useAuth();
+  const { theme }     = useTheme();
   const [enchere,   setEnchere]   = useState(null);
   const [offres,    setOffres]    = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -50,9 +47,7 @@ export default function DetailEnchereScreen({ route, navigation }) {
 
   useEffect(() => {
     if (!enchere) return;
-    const interval = setInterval(() => {
-      setTemps(getTempsRestant(enchere.fin_le));
-    }, 1000);
+    const interval = setInterval(() => setTemps(getTempsRestant(enchere.fin_le)), 1000);
     return () => clearInterval(interval);
   }, [enchere]);
 
@@ -81,29 +76,16 @@ export default function DetailEnchereScreen({ route, navigation }) {
     try {
       const token = await SecureStore.getItemAsync('token');
       const socket = io(API_URL, { auth: { token }, transports: ['websocket'] });
-      socket.on('connect', () => {
-        setConnected(true);
-        socket.emit('rejoindre_enchere', enchereId);
-      });
+      socket.on('connect', () => { setConnected(true); socket.emit('rejoindre_enchere', enchereId); });
       socket.on('disconnect', () => setConnected(false));
       socket.on('nouvelle_offre', (data) => {
-        setEnchere(prev => ({
-          ...prev,
-          offre_actuelle: data.montant,
-          meilleur_offrant_id: data.offreur.id,
-          nb_offres: (prev.nb_offres || 0) + 1,
-        }));
+        setEnchere(prev => ({ ...prev, offre_actuelle: data.montant, meilleur_offrant_id: data.offreur.id, nb_offres: (prev.nb_offres || 0) + 1 }));
         setOffres(prev => [{ ...data, nom: data.offreur.nom, prenom: data.offreur.prenom }, ...prev]);
         animerPulse();
       });
-      socket.on('erreur_offre', (data) => {
-        Alert.alert('Erreur', data.message);
-        setPlacing(false);
-      });
+      socket.on('erreur_offre', (data) => { Alert.alert('Erreur', data.message); setPlacing(false); });
       socketRef.current = socket;
-    } catch (err) {
-      console.error('Socket error:', err);
-    }
+    } catch (err) { console.error('Socket error:', err); }
   };
 
   const handlePlacerOffre = async () => {
@@ -115,105 +97,113 @@ export default function DetailEnchereScreen({ route, navigation }) {
     try {
       if (socketRef.current?.connected) {
         socketRef.current.emit('placer_offre', { enchere_id: enchereId, montant: montantNum });
-        setShowModal(false);
-        setMontant('');
-        setPlacing(false);
+        setShowModal(false); setMontant(''); setPlacing(false);
       } else {
         await api.post('/encheres/'+enchereId+'/offrir', { montant: montantNum });
-        setShowModal(false);
-        setMontant('');
-        charger();
+        setShowModal(false); setMontant(''); charger();
       }
-    } catch (err) {
-      Alert.alert('Erreur', err.message);
-    } finally {
-      setPlacing(false);
-    }
+    } catch (err) { Alert.alert('Erreur', err.message); }
+    finally { setPlacing(false); }
   };
 
   if (loading) return (
-    <View style={styles.loading}>
-      <ActivityIndicator size="large" color={COLORS.or} />
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }}>
+      <ActivityIndicator size="large" color={theme.or} />
     </View>
   );
 
   const estVendeur = enchere?.vendeur_id === user?.id;
   const estEnCours = enchere?.statut === 'en_cours';
   const estGagnant = enchere?.meilleur_offrant_id === user?.id;
+  const photos     = enchere?.photos?.filter(Boolean) || [];
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView>
-        <ImageViewer
-          photos={enchere?.photos?.filter(Boolean)}
-          style={styles.img}
-          defaultEmoji="📦"
-        >
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.backTxt}>← Retour</Text>
+        {/* IMAGE */}
+        <View style={{ height: 260, position: 'relative' }}>
+          <ImageViewer photos={photos} style={{ width: '100%', height: '100%', backgroundColor: theme.card2 }} defaultEmoji="📦" />
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 50, left: 16, backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 }}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={{ color: 'white', fontSize: 13, fontWeight: '700' }}>← Retour</Text>
           </TouchableOpacity>
-          {estEnCours && <View style={styles.liveTag}><Text style={styles.liveTxt}>🔴 EN DIRECT</Text></View>}
-          {connected && <View style={styles.connectedTag}><Text style={styles.connectedTxt}>⚡ Temps reel</Text></View>}
-        </ImageViewer>
+          {estEnCours && (
+            <View style={{ position: 'absolute', top: 50, right: 16, backgroundColor: theme.bord, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+              <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>🔴 EN DIRECT</Text>
+            </View>
+          )}
+          {connected && (
+            <View style={{ position: 'absolute', bottom: 12, right: 16, backgroundColor: 'rgba(45,122,79,0.8)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+              <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>⚡ Temps réel</Text>
+            </View>
+          )}
+        </View>
 
-        <View style={styles.body}>
-          <Text style={styles.titre}>{enchere?.titre}</Text>
-          <Text style={styles.loc}>📍 {enchere?.quartier}, {enchere?.ville}</Text>
+        <View style={{ padding: 20 }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt, marginBottom: 6 }}>{enchere?.titre}</Text>
+          <Text style={{ fontSize: 13, color: theme.txt2, marginBottom: 16 }}>📍 {enchere?.quartier}, {enchere?.ville}</Text>
 
+          {/* TIMER */}
           {estEnCours && temps && (
-            <View style={[styles.timerBox, temps.urgent && styles.timerBoxUrgent]}>
-              <Text style={styles.timerLabel}>Temps restant</Text>
-              <Text style={[styles.timerTxt, temps.urgent && styles.timerTxtUrgent]}>⏱ {temps.texte}</Text>
+            <View style={{ backgroundColor: temps.urgent ? 'rgba(204,34,34,0.12)' : theme.card2, borderRadius: 14, padding: 16, marginBottom: 14, alignItems: 'center', borderWidth: 1, borderColor: temps.urgent ? theme.bord : theme.bd }}>
+              <Text style={{ fontSize: 11, color: theme.txt2, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6 }}>Temps restant</Text>
+              <Text style={{ fontSize: 28, fontWeight: '800', color: temps.urgent ? '#FF4444' : theme.or }}>⏱ {temps.texte}</Text>
             </View>
           )}
 
-          <Animated.View style={[styles.prixBox, { transform: [{ scale: pulseAnim }] }]}>
+          {/* PRIX */}
+          <Animated.View style={{ backgroundColor: theme.card, borderRadius: 16, padding: 18, marginBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: theme.bd, transform: [{ scale: pulseAnim }] }}>
             <View>
-              <Text style={styles.prixLabel}>Offre actuelle</Text>
-              <Text style={styles.prix}>{enchere?.offre_actuelle?.toLocaleString()} FCFA</Text>
-              <Text style={styles.nbOffres}>🙋 {enchere?.nb_offres} encheres</Text>
+              <Text style={{ fontSize: 11, color: theme.txt2, fontWeight: '700', textTransform: 'uppercase', marginBottom: 4 }}>Offre actuelle</Text>
+              <Text style={{ fontSize: 28, fontWeight: '800', color: theme.bord }}>{enchere?.offre_actuelle?.toLocaleString()} FCFA</Text>
+              <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 4 }}>🙋 {enchere?.nb_offres} enchères</Text>
             </View>
             {estGagnant && estEnCours && (
-              <View style={styles.gagnantBadge}>
-                <Text style={styles.gagnantTxt}>🏆 Vous menez !</Text>
+              <View style={{ backgroundColor: theme.orl, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: theme.or }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: theme.or }}>🏆 Vous menez !</Text>
               </View>
             )}
           </Animated.View>
 
+          {/* DESCRIPTION */}
           {enchere?.description && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitre}>Description</Text>
-              <Text style={styles.desc}>{enchere?.description}</Text>
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Description</Text>
+              <Text style={{ fontSize: 14, color: theme.txt, lineHeight: 22 }}>{enchere?.description}</Text>
             </View>
           )}
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitre}>Vendeur</Text>
-            <View style={styles.vendeurRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarTxt}>{enchere?.prenom?.[0]}{enchere?.nom?.[0]}</Text>
+          {/* VENDEUR */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Vendeur</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.bord, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: 'white' }}>{enchere?.prenom?.[0]}{enchere?.nom?.[0]}</Text>
               </View>
               <View>
-                <Text style={styles.vendeurNom}>{enchere?.prenom} {enchere?.nom}</Text>
-                <Text style={styles.vendeurNote}>⭐ {enchere?.note_moyenne}</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: theme.txt }}>{enchere?.prenom} {enchere?.nom}</Text>
+                <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>⭐ {enchere?.note_moyenne}</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitre}>Historique des offres</Text>
+          {/* HISTORIQUE */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Historique des offres</Text>
             {offres.length === 0
-              ? <Text style={styles.videOffres}>Aucune offre. Soyez le premier !</Text>
+              ? <Text style={{ fontSize: 13, color: theme.txt2, textAlign: 'center', padding: 16 }}>Aucune offre. Soyez le premier !</Text>
               : offres.map((o, i) => (
-                <View key={i} style={[styles.offreRow, i === 0 && styles.offreRowFirst]}>
-                  <View style={styles.offreAvatar}>
-                    <Text style={styles.offreAvatarTxt}>{o.prenom?.[0]}{o.nom?.[0]}</Text>
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 10, marginBottom: 6, backgroundColor: i === 0 ? theme.orl : theme.card2, borderWidth: i === 0 ? 1 : 0, borderColor: theme.or }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.card, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: theme.or }}>{o.prenom?.[0]}{o.nom?.[0]}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.offreNom}>{o.prenom} {o.nom}</Text>
-                    <Text style={styles.offreDate}>{new Date(o.cree_le).toLocaleTimeString('fr-SN')}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.txt }}>{o.prenom} {o.nom}</Text>
+                    <Text style={{ fontSize: 11, color: theme.txt2 }}>{new Date(o.cree_le).toLocaleTimeString('fr-SN')}</Text>
                   </View>
-                  <Text style={[styles.offreMontant, i === 0 && styles.offreMontantFirst]}>
+                  <Text style={{ fontSize: i === 0 ? 16 : 14, fontWeight: '700', color: i === 0 ? theme.or : theme.txt2 }}>
                     {o.montant?.toLocaleString()} FCFA
                   </Text>
                 </View>
@@ -223,51 +213,46 @@ export default function DetailEnchereScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
+      {/* BOUTON ENCHÉRIR */}
       {!estVendeur && estEnCours && (
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnEncherir} onPress={() => {
-            setMontant(String(enchere.offre_actuelle + 1000));
-            setShowModal(true);
-          }}>
-            <Text style={styles.btnEncherirTxt}>🔨 Placer une offre</Text>
+        <View style={{ padding: 16, paddingBottom: 32, backgroundColor: theme.bg, borderTopWidth: 1, borderTopColor: theme.bd }}>
+          <TouchableOpacity
+            style={{ backgroundColor: theme.bord, borderRadius: 14, padding: 16, alignItems: 'center' }}
+            onPress={() => { setMontant(String(enchere.offre_actuelle + 1000)); setShowModal(true); }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '800', color: 'white' }}>🔨 Placer une offre</Text>
           </TouchableOpacity>
         </View>
       )}
 
+      {/* MODAL OFFRE */}
       <Modal visible={showModal} transparent animationType="slide">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, justifyContent: 'flex-end' }}
-        >
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            activeOpacity={1}
-            onPress={() => setShowModal(false)}
-          />
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitre}>Placer une offre</Text>
-            <Text style={styles.modalSous}>
-              Offre actuelle : <Text style={{ color: COLORS.or, fontWeight: '700' }}>{enchere?.offre_actuelle?.toLocaleString()} FCFA</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowModal(false)} />
+          <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, paddingBottom: 36 }}>
+            <View style={{ width: 36, height: 4, backgroundColor: theme.bd, borderRadius: 2, alignSelf: 'center', marginBottom: 16 }} />
+            <Text style={{ fontSize: 18, fontWeight: '800', color: theme.txt, marginBottom: 6 }}>Placer une offre</Text>
+            <Text style={{ fontSize: 13, color: theme.txt2, marginBottom: 16 }}>
+              Offre actuelle : <Text style={{ color: theme.or, fontWeight: '700' }}>{enchere?.offre_actuelle?.toLocaleString()} FCFA</Text>
             </Text>
-            <View style={styles.montantInput}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.bg, borderWidth: 1, borderColor: theme.bd, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16 }}>
               <TextInput
-                style={styles.montantField}
+                style={{ flex: 1, fontSize: 22, fontWeight: '800', color: theme.or }}
                 value={montant}
                 onChangeText={setMontant}
                 keyboardType="number-pad"
-                placeholder="Montant en FCFA"
-                placeholderTextColor={COLORS.light}
+                placeholder="Montant"
+                placeholderTextColor={theme.txt3}
                 autoFocus
               />
-              <Text style={styles.montantSuffix}>FCFA</Text>
+              <Text style={{ fontSize: 14, color: theme.txt2, fontWeight: '600' }}>FCFA</Text>
             </View>
-            <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShowModal(false)}>
-                <Text style={styles.modalBtnCancelTxt}>Annuler</Text>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity style={{ flex: 1, backgroundColor: theme.card2, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: theme.bd }} onPress={() => setShowModal(false)}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt2 }}>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtnConfirm} onPress={handlePlacerOffre} disabled={placing}>
-                {placing ? <ActivityIndicator color="white" /> : <Text style={styles.modalBtnConfirmTxt}>🔨 Enchérir</Text>}
+              <TouchableOpacity style={{ flex: 2, backgroundColor: theme.bord, borderRadius: 12, padding: 14, alignItems: 'center' }} onPress={handlePlacerOffre} disabled={placing}>
+                {placing ? <ActivityIndicator color="white" /> : <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>🔨 Enchérir</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -276,62 +261,3 @@ export default function DetailEnchereScreen({ route, navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container:         { flex: 1, backgroundColor: '#0E0A08' },
-  loading:           { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0E0A08' },
-  img:               { height: 220, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2A1E18', position: 'relative' },
-  imgEmoji:          { fontSize: 70 },
-  backBtn:           { position: 'absolute', top: 50, left: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
-  backTxt:           { color: 'white', fontSize: 13, fontWeight: '700' },
-  liveTag:           { position: 'absolute', top: 50, right: 16, backgroundColor: COLORS.bord, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  liveTxt:           { color: 'white', fontSize: 11, fontWeight: '700' },
-  connectedTag:      { position: 'absolute', bottom: 12, right: 16, backgroundColor: 'rgba(45,122,79,0.8)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  connectedTxt:      { color: 'white', fontSize: 10, fontWeight: '700' },
-  body:              { padding: 20 },
-  titre:             { fontSize: 22, fontWeight: '800', color: '#F0E8D8', marginBottom: 6 },
-  loc:               { fontSize: 13, color: COLORS.light, marginBottom: 16 },
-  timerBox:          { backgroundColor: '#1A120E', borderRadius: 14, padding: 16, marginBottom: 14, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bd },
-  timerBoxUrgent:    { borderColor: COLORS.bord, backgroundColor: '#2A0A0A' },
-  timerLabel:        { fontSize: 11, color: COLORS.light, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6 },
-  timerTxt:          { fontSize: 28, fontWeight: '800', color: COLORS.or },
-  timerTxtUrgent:    { color: '#FF4444' },
-  prixBox:           { backgroundColor: '#1E1612', borderRadius: 16, padding: 18, marginBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: COLORS.bd },
-  prixLabel:         { fontSize: 11, color: COLORS.light, fontWeight: '700', textTransform: 'uppercase', marginBottom: 4 },
-  prix:              { fontSize: 28, fontWeight: '800', color: COLORS.bord },
-  nbOffres:          { fontSize: 12, color: COLORS.light, marginTop: 4 },
-  gagnantBadge:      { backgroundColor: 'rgba(201,168,76,0.15)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: COLORS.or },
-  gagnantTxt:        { fontSize: 12, fontWeight: '700', color: COLORS.or },
-  section:           { marginBottom: 20 },
-  sectionTitre:      { fontSize: 12, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
-  desc:              { fontSize: 14, color: '#F0E8D8', lineHeight: 22 },
-  vendeurRow:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar:            { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.bord, justifyContent: 'center', alignItems: 'center' },
-  avatarTxt:         { fontSize: 16, fontWeight: '700', color: 'white' },
-  vendeurNom:        { fontSize: 15, fontWeight: '700', color: '#F0E8D8' },
-  vendeurNote:       { fontSize: 12, color: COLORS.light, marginTop: 2 },
-  videOffres:        { fontSize: 13, color: COLORS.light, textAlign: 'center', padding: 16 },
-  offreRow:          { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 10, marginBottom: 6, backgroundColor: '#1A120E' },
-  offreRowFirst:     { backgroundColor: 'rgba(201,168,76,0.1)', borderWidth: 1, borderColor: COLORS.or },
-  offreAvatar:       { width: 32, height: 32, borderRadius: 16, backgroundColor: '#2A1E18', justifyContent: 'center', alignItems: 'center' },
-  offreAvatarTxt:    { fontSize: 11, fontWeight: '700', color: COLORS.or },
-  offreNom:          { fontSize: 13, fontWeight: '600', color: '#F0E8D8' },
-  offreDate:         { fontSize: 11, color: COLORS.light },
-  offreMontant:      { fontSize: 14, fontWeight: '700', color: COLORS.light },
-  offreMontantFirst: { color: COLORS.or, fontSize: 16 },
-  footer:            { padding: 16, paddingBottom: 32, backgroundColor: '#0E0A08', borderTopWidth: 1, borderTopColor: COLORS.bd },
-  btnEncherir:       { backgroundColor: COLORS.bord, borderRadius: 14, padding: 16, alignItems: 'center' },
-  btnEncherirTxt:    { fontSize: 16, fontWeight: '800', color: 'white' },
-  modalSheet:        { backgroundColor: '#1E1612', borderRadius: 24, padding: 20, paddingBottom: 36 },
-  modalHandle:       { width: 36, height: 4, backgroundColor: COLORS.bd, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
-  modalTitre:        { fontSize: 18, fontWeight: '800', color: '#F0E8D8', marginBottom: 6 },
-  modalSous:         { fontSize: 13, color: COLORS.light, marginBottom: 16 },
-  montantInput:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0E0A08', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16 },
-  montantField:      { flex: 1, fontSize: 22, fontWeight: '800', color: COLORS.or },
-  montantSuffix:     { fontSize: 14, color: COLORS.light, fontWeight: '600' },
-  modalBtns:         { flexDirection: 'row', gap: 10 },
-  modalBtnCancel:    { flex: 1, backgroundColor: '#2A1E18', borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bd },
-  modalBtnCancelTxt: { fontSize: 14, fontWeight: '700', color: COLORS.light },
-  modalBtnConfirm:   { flex: 2, backgroundColor: COLORS.bord, borderRadius: 12, padding: 14, alignItems: 'center' },
-  modalBtnConfirmTxt:{ fontSize: 14, fontWeight: '700', color: 'white' },
-});
