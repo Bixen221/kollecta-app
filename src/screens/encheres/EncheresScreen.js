@@ -31,7 +31,6 @@ export default function EncheresScreen({ navigation }) {
       if (filtre === 'À venir')   params.statut = 'a_venir';
       if (filtre === 'Terminées') params.statut = 'termine';
       const res = await api.get('/encheres', { params });
-      // Filtrer les publications du vendeur
       const filtered = (res.encheres || []).filter(e => e.vendeur_id !== user?.id);
       setEncheres(filtered);
     } catch (err) { console.error(err); }
@@ -72,18 +71,34 @@ export default function EncheresScreen({ navigation }) {
         </View>
       </View>
 
-      {/* FILTRES */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginVertical: 10, maxHeight: 44 }}>
-        {filtres.map(f => (
-          <TouchableOpacity
-            key={f}
-            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: filtre === f ? theme.bord : theme.bd, marginRight: 8, backgroundColor: filtre === f ? theme.bord : theme.card }}
-            onPress={() => setFiltre(f)}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* FILTRES — View à hauteur fixe qui contient le ScrollView horizontal */}
+      <View style={{ height: 54, justifyContent: 'center' }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, alignItems: 'center' }}
+        >
+          {filtres.map(f => (
+            <TouchableOpacity
+              key={f}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: filtre === f ? theme.bord : theme.bd,
+                marginRight: 8,
+                backgroundColor: filtre === f ? theme.bord : theme.card,
+                height: 34,
+                justifyContent: 'center',
+              }}
+              onPress={() => setFiltre(f)}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       {loading
         ? <ActivityIndicator size="large" color={theme.or} style={{ marginTop: 40 }} />
@@ -112,7 +127,7 @@ export default function EncheresScreen({ navigation }) {
                     </View>
                     {e.statut === 'en_cours' && (
                       <View style={{ position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.72)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20 }}>
-                        <Text style={{ fontSize: 10, fontWeight: '700', color: theme.or }}>⏱ {getTempsRestant(e.fin_le)}</Text>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#C9A84C' }}>⏱ {getTempsRestant(e.fin_le)}</Text>
                       </View>
                     )}
                   </View>

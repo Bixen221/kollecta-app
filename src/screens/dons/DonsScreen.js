@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert, TextInput, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, TextInput, Image } from 'react-native';
 import api from '../../services/api';
 import { useReservations } from '../../context/ReservationsContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -24,7 +24,6 @@ export default function DonsScreen({ navigation }) {
       if (filtre === 'Matériels')  params.type = 'materiel';
       if (filtre === 'Urgent')     params.urgent = true;
       const res = await api.get('/dons', { params });
-      // Filtrer les publications du proprio
       const filtered = (res.dons || []).filter(d => d.proprietaire_id !== user?.id);
       setDons(filtered);
     } catch (err) { console.error(err); }
@@ -80,18 +79,34 @@ export default function DonsScreen({ navigation }) {
         </View>
       </View>
 
-      {/* FILTRES */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 16, marginVertical: 10, maxHeight: 44 }}>
-        {filtres.map(f => (
-          <TouchableOpacity
-            key={f}
-            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: filtre === f ? theme.bord : theme.bd, marginRight: 8, backgroundColor: filtre === f ? theme.bord : theme.card }}
-            onPress={() => setFiltre(f)}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* FILTRES — View à hauteur fixe qui contient le ScrollView horizontal */}
+      <View style={{ height: 54, justifyContent: 'center' }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, alignItems: 'center' }}
+        >
+          {filtres.map(f => (
+            <TouchableOpacity
+              key={f}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: filtre === f ? theme.bord : theme.bd,
+                marginRight: 8,
+                backgroundColor: filtre === f ? theme.bord : theme.card,
+                height: 34,
+                justifyContent: 'center',
+              }}
+              onPress={() => setFiltre(f)}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '600', color: filtre === f ? 'white' : theme.txt2 }}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       {loading
         ? <ActivityIndicator size="large" color={theme.or} style={{ marginTop: 40 }} />
@@ -111,10 +126,10 @@ export default function DonsScreen({ navigation }) {
                     onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
                   >
                     <View style={{ height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE', position: 'relative' }}>
-  {don.photos && don.photos[0]
-    ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-    : <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
-  }
+                      {don.photos && don.photos[0]
+                        ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        : <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+                      }
                       {reserve && (
                         <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
                           <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>✓ Réservé</Text>

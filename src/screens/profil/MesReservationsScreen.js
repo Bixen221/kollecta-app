@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshCon
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useReservations } from '../../context/ReservationsContext';
+import EvaluationModal from '../../components/EvaluationModal';
 
 export default function MesReservationsScreen({ navigation }) {
   const { theme }  = useTheme();
@@ -11,11 +12,25 @@ export default function MesReservationsScreen({ navigation }) {
   const [loading,      setLoading]      = useState(true);
   const [refreshing,   setRefreshing]   = useState(false);
   const [onglet,       setOnglet]       = useState('en_cours');
+  const [evalModal,    setEvalModal]    = useState(null);
+  const [dejaEvalues,  setDejaEvalues]  = useState({});
 
   const charger = async () => {
     try {
       const res = await api.get('/dons/reservations/mes-reservations');
-      setReservations(res.reservations || []);
+      const resas = res.reservations || [];
+      setReservations(resas);
+
+      // Vérifier quels dons clôturés ont déjà été évalués
+      const clotures = resas.filter(r => r.statut === 'cloture');
+      const evals = {};
+      for (const r of clotures) {
+        try {
+          const check = await api.get('/evaluations/don/'+r.don_id);
+          evals[r.don_id] = check.dejaEvalue;
+        } catch (e) {}
+      }
+      setDejaEvalues(evals);
     } catch (err) { console.error(err); }
     finally { setLoading(false); setRefreshing(false); }
   };
@@ -62,6 +77,7 @@ export default function MesReservationsScreen({ navigation }) {
   const ResaCard = ({ resa }) => {
     const statut = getStatutLabel(resa.statut);
     const besoinConfirmation = ['confirme_proprio'].includes(resa.statut);
+    const peutEvaluer = resa.statut === 'cloture' && !dejaEvalues[resa.don_id];
 
     return (
       <TouchableOpacity
@@ -105,6 +121,27 @@ export default function MesReservationsScreen({ navigation }) {
                   <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2 }}>✗ Pas encore</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          )}
+
+          {/* EVALUER */}
+          {peutEvaluer && (
+            <TouchableOpacity
+              style={{ backgroundColor: theme.orl, borderRadius: 9, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.or, marginBottom: 8 }}
+              onPress={() => setEvalModal({
+                evalueId:  resa.proprietaire_id,
+                evalueNom: resa.prenom+' '+resa.nom,
+                donId:     resa.don_id,
+                donTitre:  resa.titre,
+              })}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: theme.or }}>⭐ Évaluer {resa.prenom}</Text>
+            </TouchableOpacity>
+          )}
+
+          {resa.statut === 'cloture' && dejaEvalues[resa.don_id] && (
+            <View style={{ backgroundColor: theme.grl, borderRadius: 9, padding: 8, alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: theme.gr }}>✓ Vous avez évalué ce don</Text>
             </View>
           )}
 
@@ -165,6 +202,17 @@ export default function MesReservationsScreen({ navigation }) {
             <View style={{ height: 30 }} />
           </ScrollView>
       }
+
+      {/* MODAL EVALUATION */}
+      <EvaluationModal
+        visible={!!evalModal}
+        onClose={() => setEvalModal(null)}
+        evalueId={evalModal?.evalueId}
+        evalueNom={evalModal?.evalueNom}
+        donId={evalModal?.donId}
+        donTitre={evalModal?.donTitre}
+        onSuccess={charger}
+      />
     </View>
   );
 }
