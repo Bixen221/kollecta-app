@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -40,8 +40,11 @@ export default function ProfilScreen({ navigation }) {
       {/* HEADER */}
       <View style={{ backgroundColor: theme.hdr, padding: 24, paddingTop: 50, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.bd }}>
         <Text style={{ fontSize: 18, fontWeight: '800', color: theme.or, letterSpacing: 2, marginBottom: 16 }}>KOLLECTA</Text>
-        <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.or, justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: theme.or }}>{user?.prenom?.[0]}{user?.nom?.[0]}</Text>
+        <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.or, justifyContent: 'center', alignItems: 'center', marginBottom: 10, overflow: 'hidden' }}>
+          {user?.avatar_url
+            ? <Image source={{ uri: user.avatar_url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={{ fontSize: 24, fontWeight: '800', color: theme.or }}>{user?.prenom?.[0]}{user?.nom?.[0]}</Text>
+          }
         </View>
         <Text style={{ fontSize: 18, fontWeight: '800', color: theme.or }}>{user?.prenom} {user?.nom}</Text>
         <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 3 }}>📍 {user?.quartier || 'Dakar'}</Text>

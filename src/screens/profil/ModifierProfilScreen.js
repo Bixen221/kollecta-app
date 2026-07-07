@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as SecureStore from 'expo-secure-store';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+
+const API_URL = 'https://kollecta-backend.onrender.com/api';
 
 export default function ModifierProfilScreen({ navigation }) {
   const { user, connexion } = useAuth();
@@ -14,14 +18,84 @@ export default function ModifierProfilScreen({ navigation }) {
     quartier: user?.quartier || '',
     ville:    user?.ville    || 'Dakar',
   });
-  const [loading, setLoading] = useState(false);
+  const [avatarUri,     setAvatarUri]     = useState(user?.avatar_url || null);
+  const [avatarLocal,   setAvatarLocal]   = useState(null);
+  const [loading,       setLoading]       = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const update = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  const choisirPhoto = () => {
+    Alert.alert('Photo de profil', 'Choisissez une option', [
+      { text: '📷 Prendre une photo', onPress: () => lancerPicker('camera') },
+      { text: '🖼️ Galerie photo',     onPress: () => lancerPicker('galerie') },
+      { text: 'Annuler', style: 'cancel' },
+    ]);
+  };
+
+  const lancerPicker = async (source) => {
+    try {
+      let result;
+      if (source === 'camera') {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) return Alert.alert('Permission refusée', 'Autorisez l\'accès à la caméra.');
+        result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+      } else {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) return Alert.alert('Permission refusée', 'Autorisez l\'accès aux photos.');
+        result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+      }
+      if (!result.canceled && result.assets?.length > 0) {
+        setAvatarLocal(result.assets[0]);
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    }
+  };
+
+  const uploaderAvatar = async () => {
+    if (!avatarLocal) return null;
+    setUploadingPhoto(true);
+    try {
+      const token = await SecureStore.getItemAsync('token');
+      const formData = new FormData();
+      formData.append('photo', { uri: avatarLocal.uri, type: 'image/jpeg', name: 'avatar.jpg' });
+      formData.append('entite_type', 'avatar');
+      formData.append('entite_id', user.id);
+      formData.append('ordre', '0');
+
+      const res = await fetch(API_URL+'/medias/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer '+token, 'Content-Type': 'multipart/form-data' },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      return data.media.url;
+    } catch (err) {
+      Alert.alert('Erreur photo', err.message);
+      return null;
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleSauvegarder = async () => {
     setLoading(true);
     try {
+      let avatarUrl = user?.avatar_url;
+
+      if (avatarLocal) {
+        const url = await uploaderAvatar();
+        if (url) {
+          avatarUrl = url;
+          await api.put('/auth/avatar', { avatar_url: url });
+        }
+      }
+
       await api.put('/auth/profil', form);
+
       Alert.alert('✅ Profil mis à jour !', 'Vos informations ont été sauvegardées.', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
@@ -45,9 +119,18 @@ export default function ModifierProfilScreen({ navigation }) {
         <View style={{ padding: 16 }}>
           {/* AVATAR */}
           <View style={{ alignItems: 'center', marginVertical: 20 }}>
-            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.or, justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-              <Text style={{ fontSize: 28, fontWeight: '800', color: theme.or }}>{form.prenom?.[0]}{form.nom?.[0]}</Text>
-            </View>
+            <TouchableOpacity onPress={choisirPhoto} style={{ position: 'relative' }}>
+              <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.or, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                {avatarUri
+                  ? <Image source={{ uri: avatarUri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                  : <Text style={{ fontSize: 30, fontWeight: '800', color: theme.or }}>{form.prenom?.[0]}{form.nom?.[0]}</Text>
+                }
+              </View>
+              <View style={{ position: 'absolute', bottom: 0, right: 0, width: 30, height: 30, borderRadius: 15, backgroundColor: theme.or, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: theme.bg }}>
+                <Text style={{ fontSize: 14 }}>📷</Text>
+              </View>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 10 }}>Touchez pour changer la photo</Text>
           </View>
 
           <View style={{ backgroundColor: theme.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: theme.bd }}>
@@ -74,11 +157,14 @@ export default function ModifierProfilScreen({ navigation }) {
           </View>
 
           <TouchableOpacity
-            style={{ backgroundColor: theme.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8, opacity: loading ? 0.7 : 1 }}
+            style={{ backgroundColor: theme.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8, opacity: (loading || uploadingPhoto) ? 0.7 : 1 }}
             onPress={handleSauvegarder}
-            disabled={loading}
+            disabled={loading || uploadingPhoto}
           >
-            {loading ? <ActivityIndicator color={theme.dark} /> : <Text style={{ fontSize: 16, fontWeight: '800', color: '#0E0A08' }}>Sauvegarder ✓</Text>}
+            {(loading || uploadingPhoto)
+              ? <ActivityIndicator color={theme.dark} />
+              : <Text style={{ fontSize: 16, fontWeight: '800', color: '#0E0A08' }}>Sauvegarder ✓</Text>
+            }
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, TextInput, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, TextInput, Image, Dimensions } from 'react-native';
 import api from '../../services/api';
 import { useReservations } from '../../context/ReservationsContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+
+const { width } = Dimensions.get('window');
+const GRID_CARD_WIDTH = (width - 16 * 2 - 10) / 2;
 
 export default function DonsScreen({ navigation }) {
   const { theme }  = useTheme();
@@ -13,6 +16,7 @@ export default function DonsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [filtre,     setFiltre]     = useState('Tout');
   const [recherche,  setRecherche]  = useState('');
+  const [vue,        setVue]        = useState('liste'); // 'liste' ou 'grille'
   const { estReserve, getReservation, charger: rechargerResas } = useReservations();
 
   const filtres = ['Tout', 'Nourriture', 'Matériels', 'Urgent'];
@@ -53,11 +57,125 @@ export default function DonsScreen({ navigation }) {
     d.categorie?.toLowerCase().includes(recherche.toLowerCase())
   );
 
+  const CarteListe = ({ don }) => {
+    const reserve = estReserve(don.id);
+    return (
+      <TouchableOpacity
+        style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: reserve ? 1.5 : 1, borderColor: reserve ? theme.gr : theme.bd }}
+        onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
+      >
+        <View style={{ height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE', position: 'relative' }}>
+          {don.photos && don.photos[0]
+            ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+          }
+          {reserve && (
+            <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+              <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>✓ Réservé</Text>
+            </View>
+          )}
+          {don.urgent && (
+            <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(204,34,34,0.9)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
+              <Text style={{ color: 'white', fontSize: 9, fontWeight: '700' }}>🚨 Urgent</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ padding: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 3 }}>{don.titre}</Text>
+          <Text style={{ fontSize: 11, color: theme.txt2 }}>{don.quartier} · {don.ville}</Text>
+          {reserve && <Text style={{ fontSize: 11, color: '#4ADE80', marginTop: 4, fontWeight: '600' }}>⏳ En attente de contact WhatsApp</Text>}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+            <Text style={{ fontSize: 12, color: theme.txt2 }}>{don.prenom} {don.nom}</Text>
+            {reserve ? (
+              <TouchableOpacity
+                style={{ backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#FF6B6B' }}
+                onPress={() => handleAnnulerReservation(don.id)}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={{ backgroundColor: don.quantite_dispo <= 0 ? '#3A3030' : theme.bord, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 }}
+                onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
+                disabled={don.quantite_dispo <= 0}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>{don.quantite_dispo <= 0 ? 'Indisponible' : 'Réserver'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const CarteGrille = ({ don }) => {
+    const reserve = estReserve(don.id);
+    return (
+      <TouchableOpacity
+        style={{ width: GRID_CARD_WIDTH, backgroundColor: theme.card, borderRadius: 14, marginBottom: 10, overflow: 'hidden', borderWidth: reserve ? 1.5 : 1, borderColor: reserve ? theme.gr : theme.bd }}
+        onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
+      >
+        <View style={{ height: 90, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE', position: 'relative' }}>
+          {don.photos && don.photos[0]
+            ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <Text style={{ fontSize: 30 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
+          }
+          {reserve && (
+            <View style={{ position: 'absolute', top: 6, right: 6, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 20 }}>
+              <Text style={{ color: 'white', fontSize: 8, fontWeight: '700' }}>✓</Text>
+            </View>
+          )}
+          {don.urgent && (
+            <View style={{ position: 'absolute', top: 6, left: 6 }}>
+              <Text style={{ fontSize: 12 }}>🚨</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ padding: 9 }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt, marginBottom: 2 }} numberOfLines={1}>{don.titre}</Text>
+          <Text style={{ fontSize: 10, color: theme.txt2, marginBottom: 6 }} numberOfLines={1}>{don.quartier}</Text>
+          {reserve ? (
+            <TouchableOpacity
+              style={{ backgroundColor: '#3A1A1A', borderRadius: 7, paddingVertical: 6, alignItems: 'center', borderWidth: 1, borderColor: '#FF6B6B' }}
+              onPress={() => handleAnnulerReservation(don.id)}
+            >
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={{ backgroundColor: don.quantite_dispo <= 0 ? '#3A3030' : theme.bord, borderRadius: 7, paddingVertical: 6, alignItems: 'center' }}
+              onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
+              disabled={don.quantite_dispo <= 0}
+            >
+              <Text style={{ fontSize: 10, fontWeight: '700', color: 'white' }}>{don.quantite_dispo <= 0 ? 'Indispo' : 'Réserver'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       {/* HEADER */}
       <View style={{ backgroundColor: theme.hdr, padding: 20, paddingTop: 50 }}>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: theme.or, letterSpacing: 2, marginBottom: 8 }}>KOLLECTA</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: theme.or, letterSpacing: 2 }}>KOLLECTA</Text>
+          <View style={{ flexDirection: 'row', backgroundColor: theme.card2, borderRadius: 10, borderWidth: 1, borderColor: theme.bd }}>
+            <TouchableOpacity
+              style={{ padding: 8, borderRadius: 9, backgroundColor: vue === 'liste' ? theme.or : 'transparent' }}
+              onPress={() => setVue('liste')}
+            >
+              <Text style={{ fontSize: 15 }}>{vue === 'liste' ? '☰' : '☰'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ padding: 8, borderRadius: 9, backgroundColor: vue === 'grille' ? theme.or : 'transparent' }}
+              onPress={() => setVue('grille')}
+            >
+              <Text style={{ fontSize: 15 }}>{vue === 'grille' ? '▦' : '▦'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt }}>🎁 Dons</Text>
         <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2, marginBottom: 14 }}>Trouvez un don près de chez vous</Text>
 
@@ -79,7 +197,7 @@ export default function DonsScreen({ navigation }) {
         </View>
       </View>
 
-      {/* FILTRES — View à hauteur fixe qui contient le ScrollView horizontal */}
+      {/* FILTRES */}
       <View style={{ height: 54, justifyContent: 'center' }}>
         <ScrollView
           horizontal
@@ -90,15 +208,9 @@ export default function DonsScreen({ navigation }) {
             <TouchableOpacity
               key={f}
               style={{
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: filtre === f ? theme.bord : theme.bd,
-                marginRight: 8,
-                backgroundColor: filtre === f ? theme.bord : theme.card,
-                height: 34,
-                justifyContent: 'center',
+                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1,
+                borderColor: filtre === f ? theme.bord : theme.bd, marginRight: 8,
+                backgroundColor: filtre === f ? theme.bord : theme.card, height: 34, justifyContent: 'center',
               }}
               onPress={() => setFiltre(f)}
             >
@@ -117,57 +229,11 @@ export default function DonsScreen({ navigation }) {
               ? <Text style={{ textAlign: 'center', color: theme.txt2, marginTop: 40, fontSize: 14 }}>
                   {recherche ? 'Aucun résultat pour "'+recherche+'"' : 'Aucun don disponible.'}
                 </Text>
-              : donsFiltres.map(don => {
-                const reserve = estReserve(don.id);
-                return (
-                  <TouchableOpacity
-                    key={don.id}
-                    style={{ backgroundColor: theme.card, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden', borderWidth: reserve ? 1.5 : 1, borderColor: reserve ? theme.gr : theme.bd }}
-                    onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
-                  >
-                    <View style={{ height: 100, justifyContent: 'center', alignItems: 'center', backgroundColor: don.type === 'nourriture' ? '#FFF8E8' : '#EAF5EE', position: 'relative' }}>
-                      {don.photos && don.photos[0]
-                        ? <Image source={{ uri: don.photos[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                        : <Text style={{ fontSize: 36 }}>{don.type === 'nourriture' ? '🍱' : '📦'}</Text>
-                      }
-                      {reserve && (
-                        <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-                          <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>✓ Réservé</Text>
-                        </View>
-                      )}
-                      {don.urgent && (
-                        <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(204,34,34,0.9)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 }}>
-                          <Text style={{ color: 'white', fontSize: 9, fontWeight: '700' }}>🚨 Urgent</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={{ padding: 12 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt, marginBottom: 3 }}>{don.titre}</Text>
-                      <Text style={{ fontSize: 11, color: theme.txt2 }}>{don.quartier} · {don.ville}</Text>
-                      {reserve && <Text style={{ fontSize: 11, color: '#4ADE80', marginTop: 4, fontWeight: '600' }}>⏳ En attente de contact WhatsApp</Text>}
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                        <Text style={{ fontSize: 12, color: theme.txt2 }}>{don.prenom} {don.nom}</Text>
-                        {reserve ? (
-                          <TouchableOpacity
-                            style={{ backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#FF6B6B' }}
-                            onPress={() => handleAnnulerReservation(don.id)}
-                          >
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
-                          </TouchableOpacity>
-                        ) : (
-                          <TouchableOpacity
-                            style={{ backgroundColor: don.quantite_dispo <= 0 ? '#3A3030' : theme.bord, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 }}
-                            onPress={() => navigation.navigate('DetailDon', { donId: don.id })}
-                            disabled={don.quantite_dispo <= 0}
-                          >
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>{don.quantite_dispo <= 0 ? 'Indisponible' : 'Réserver'}</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })
+              : vue === 'liste'
+                ? donsFiltres.map(don => <CarteListe key={don.id} don={don} />)
+                : <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+                    {donsFiltres.map(don => <CarteGrille key={don.id} don={don} />)}
+                  </View>
             }
             <View style={{ height: 20 }} />
           </ScrollView>
