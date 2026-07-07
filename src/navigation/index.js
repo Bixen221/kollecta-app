@@ -16,6 +16,7 @@ import DetailDonScreen       from '../screens/dons/DetailDonScreen';
 import PublierDonScreen      from '../screens/dons/PublierDonScreen';
 import EncheresScreen        from '../screens/encheres/EncheresScreen';
 import DetailEnchereScreen   from '../screens/encheres/DetailEnchereScreen';
+import ProfilPublicScreen    from '../screens/profil/ProfilPublicScreen';
 import PublierEnchereScreen  from '../screens/encheres/PublierEnchereScreen';
 import ProfilScreen          from '../screens/profil/ProfilScreen';
 import MesDonsScreen         from '../screens/profil/MesDonsScreen';
@@ -34,6 +35,7 @@ const AccueilStack = () => (
     <Stack.Screen name="AccueilHome"   component={AccueilScreen} />
     <Stack.Screen name="DetailDon"     component={DetailDonScreen} />
     <Stack.Screen name="DetailEnchere" component={DetailEnchereScreen} />
+    <Stack.Screen name="ProfilPublic"  component={ProfilPublicScreen} />
   </Stack.Navigator>
 );
 
@@ -41,6 +43,7 @@ const DonsStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="ListeDons"  component={DonsScreen} />
     <Stack.Screen name="DetailDon"  component={DetailDonScreen} />
+    <Stack.Screen name="ProfilPublic" component={ProfilPublicScreen} />
   </Stack.Navigator>
 );
 
@@ -48,6 +51,7 @@ const EncheresStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="ListeEncheres" component={EncheresScreen} />
     <Stack.Screen name="DetailEnchere" component={DetailEnchereScreen} />
+    <Stack.Screen name="ProfilPublic"  component={ProfilPublicScreen} />
   </Stack.Navigator>
 );
 
@@ -59,6 +63,7 @@ const ProfilStack = () => (
     <Stack.Screen name="Notifications"   component={NotificationsScreen} />
     <Stack.Screen name="DetailDon"       component={DetailDonScreen} />
     <Stack.Screen name="DetailEnchere"   component={DetailEnchereScreen} />
+    <Stack.Screen name="ProfilPublic"    component={ProfilPublicScreen} />
     <Stack.Screen name="ModifierProfil"  component={ModifierProfilScreen} />
     <Stack.Screen name="Parametres"      component={ParametresScreen} />
     <Stack.Screen name="Messages"        component={MessagesScreen} />

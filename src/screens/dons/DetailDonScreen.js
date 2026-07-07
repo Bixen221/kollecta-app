@@ -151,7 +151,10 @@ export default function DetailDonScreen({ route, navigation }) {
           {/* PROPRIETAIRE */}
           <View style={{ marginBottom: 20 }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Propriétaire</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              onPress={() => navigation.navigate('ProfilPublic', { userId: don?.proprietaire_id, nom: don?.nom, prenom: don?.prenom })}
+            >
               <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.bord, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: 'white' }}>{don?.prenom?.[0]}{don?.nom?.[0]}</Text>
               </View>
@@ -159,7 +162,8 @@ export default function DetailDonScreen({ route, navigation }) {
                 <Text style={{ fontSize: 15, fontWeight: '700', color: theme.txt }}>{don?.prenom} {don?.nom}</Text>
                 <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>⭐ {don?.note_moyenne} · {don?.nb_dons} dons</Text>
               </View>
-            </View>
+              <Text style={{ fontSize: 16, color: theme.txt3, marginLeft: 'auto' }}>›</Text>
+            </TouchableOpacity>
           </View>
 
           {/* ACTIONS PROPRIO */}

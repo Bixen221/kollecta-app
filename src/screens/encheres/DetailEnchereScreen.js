@@ -178,7 +178,10 @@ export default function DetailEnchereScreen({ route, navigation }) {
           {/* VENDEUR */}
           <View style={{ marginBottom: 20 }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Vendeur</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              onPress={() => navigation.navigate('ProfilPublic', { userId: enchere?.vendeur_id, nom: enchere?.nom, prenom: enchere?.prenom })}
+            >
               <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.bord, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: 'white' }}>{enchere?.prenom?.[0]}{enchere?.nom?.[0]}</Text>
               </View>
@@ -186,7 +189,8 @@ export default function DetailEnchereScreen({ route, navigation }) {
                 <Text style={{ fontSize: 15, fontWeight: '700', color: theme.txt }}>{enchere?.prenom} {enchere?.nom}</Text>
                 <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>⭐ {enchere?.note_moyenne}</Text>
               </View>
-            </View>
+              <Text style={{ fontSize: 16, color: theme.txt3, marginLeft: 'auto' }}>›</Text>
+            </TouchableOpacity>
           </View>
 
           {/* HISTORIQUE */}
