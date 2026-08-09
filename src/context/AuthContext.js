@@ -36,6 +36,14 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const connexionAvecGoogle = async (googleInfos) => {
+    const data = await api.post('/auth/google', googleInfos);
+    await SecureStore.setItemAsync('token', data.token);
+    setToken(data.token);
+    setUser(data.user);
+    return data;
+  };
+
   const inscription = async (infos) => {
     const data = await api.post('/auth/inscription', infos);
     await SecureStore.setItemAsync('token', data.token);

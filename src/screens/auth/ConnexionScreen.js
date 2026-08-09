@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import GoogleAuthButton from './GoogleAuthButton';
 
 const COLORS = {
   or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08', dark2: '#1A120E',
@@ -73,7 +74,15 @@ export default function ConnexionScreen({ navigation }) {
         }
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Inscription')}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
+        <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
+        <Text style={{ color: COLORS.light, fontSize: 12, marginHorizontal: 10 }}>ou</Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
+      </View>
+
+      <GoogleAuthButton />
+
+      <TouchableOpacity onPress={() => navigation.navigate('Inscription')} style={{ marginTop: 16 }}>
         <Text style={styles.lien}>Pas de compte ? <Text style={{ color: COLORS.or }}>S'inscrire</Text></Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
