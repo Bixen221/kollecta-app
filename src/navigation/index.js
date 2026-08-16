@@ -113,7 +113,15 @@ const TabNavigation = ({ navigation }) => {
         options={{ tabBarLabel: '' }}
       />
       <Tab.Screen name="Enchères"  component={EncheresStack} />
-      <Tab.Screen name="Profil"    component={ProfilStack} />
+      <Tab.Screen
+        name="Profil"
+        component={ProfilStack}
+        listeners={({ navigation: navProfil }) => ({
+          tabPress: () => {
+            navProfil.navigate('Profil', { screen: 'ProfilHome' });
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 };

@@ -62,6 +62,9 @@ export default function NotificationsScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
       {/* HEADER */}
       <View style={{ backgroundColor: theme.hdr, padding: 20, paddingTop: 50, borderBottomWidth: 1, borderBottomColor: theme.bd }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
+          <Text style={{ fontSize: 13, color: theme.txt2, fontWeight: '600' }}>← Retour</Text>
+        </TouchableOpacity>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
             <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt }}>🔔 Notifications</Text>
