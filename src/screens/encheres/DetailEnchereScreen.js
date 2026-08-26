@@ -115,6 +115,16 @@ export default function DetailEnchereScreen({ route, navigation }) {
   const estVendeur = enchere?.vendeur_id === user?.id;
   const estEnCours = enchere?.statut === 'en_cours';
   const estGagnant = enchere?.meilleur_offrant_id === user?.id;
+  const estTerminee = enchere?.statut === 'termine' || new Date(enchere?.fin_le) <= new Date();
+
+  const handleContacter = async () => {
+    try {
+      const res = await api.post('/messages/demarrer', { entite_type: 'enchere', entite_id: enchereId });
+      navigation.navigate('Conversation', { conversationId: res.conversation.id });
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    }
+  };
   const photos     = enchere?.photos?.filter(Boolean) || [];
 
   return (
@@ -216,6 +226,22 @@ export default function DetailEnchereScreen({ route, navigation }) {
           </View>
         </View>
       </ScrollView>
+
+      {/* GAGNANT — CONTACTER LE VENDEUR */}
+      {!estVendeur && estTerminee && estGagnant && (
+        <View style={{ padding: 16, paddingBottom: 32, backgroundColor: theme.bg, borderTopWidth: 1, borderTopColor: theme.bd }}>
+          <View style={{ backgroundColor: theme.orl, borderRadius: 12, padding: 14, marginBottom: 12, alignItems: 'center' }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: theme.or }}>🏆 Félicitations, vous avez remporté cette enchère !</Text>
+          </View>
+          <TouchableOpacity
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.bord, borderRadius: 14, padding: 16 }}
+            onPress={handleContacter}
+          >
+            <Text style={{ fontSize: 16 }}>💬</Text>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: 'white' }}>Contacter le vendeur</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* BOUTON ENCHÉRIR */}
       {!estVendeur && estEnCours && (

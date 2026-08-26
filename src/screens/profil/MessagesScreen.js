@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -7,37 +8,30 @@ import api from '../../services/api';
 export default function MessagesScreen({ navigation }) {
   const { theme } = useTheme();
   const { user }  = useAuth();
-  const [reservations, setReservations] = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [recherche,    setRecherche]    = useState('');
-
-  useEffect(() => {
-    charger();
-  }, []);
+  const [conversations, setConversations] = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [recherche,     setRecherche]     = useState('');
 
   const charger = async () => {
     try {
-      const res = await api.get('/dons/reservations/mes-reservations');
-      const actives = (res.reservations || []).filter(r => !['annule'].includes(r.statut));
-      setReservations(actives);
+      const res = await api.get('/messages/conversations');
+      setConversations(res.conversations || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
-  const ouvrirWhatsApp = (whatsapp, titre) => {
-    const numero  = whatsapp?.replace(/\D/g, '');
-    const message = encodeURIComponent('Bonjour ! Je vous contacte via Kollecta concernant le don "'+titre+'".');
-    const url     = 'https://wa.me/'+numero+'?text='+message;
-    const { Linking } = require('react-native');
-    Linking.openURL(url).catch(() => {
-      alert('Impossible d\'ouvrir WhatsApp');
-    });
-  };
+  useFocusEffect(
+    useCallback(() => {
+      charger();
+      const interval = setInterval(charger, 10000);
+      return () => clearInterval(interval);
+    }, [])
+  );
 
-  const filtres = reservations.filter(r =>
-    r.titre?.toLowerCase().includes(recherche.toLowerCase()) ||
-    r.nom?.toLowerCase().includes(recherche.toLowerCase()) ||
-    r.prenom?.toLowerCase().includes(recherche.toLowerCase())
+  const filtres = conversations.filter(c =>
+    c.autre_nom?.toLowerCase().includes(recherche.toLowerCase()) ||
+    c.autre_prenom?.toLowerCase().includes(recherche.toLowerCase()) ||
+    c.dernier_message?.toLowerCase().includes(recherche.toLowerCase())
   );
 
   return (
@@ -47,7 +41,9 @@ export default function MessagesScreen({ navigation }) {
           <Text style={{ fontSize: 13, color: theme.txt2, fontWeight: '600' }}>← Retour</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt }}>💬 Messages</Text>
-        <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>{reservations.length} conversation{reservations.length > 1 ? 's' : ''} active{reservations.length > 1 ? 's' : ''}</Text>
+        <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }}>
+          {conversations.length} conversation{conversations.length > 1 ? 's' : ''}
+        </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.card2, borderRadius: 11, padding: 10, borderWidth: 1, borderColor: theme.bd, marginTop: 12 }}>
           <Text style={{ fontSize: 14, color: theme.txt3 }}>🔍</Text>
@@ -69,31 +65,29 @@ export default function MessagesScreen({ navigation }) {
                   <Text style={{ fontSize: 48, marginBottom: 16 }}>💬</Text>
                   <Text style={{ fontSize: 18, fontWeight: '700', color: theme.txt, marginBottom: 8 }}>Aucune conversation</Text>
                   <Text style={{ fontSize: 14, color: theme.txt2, textAlign: 'center', lineHeight: 20 }}>
-                    Vos conversations avec les propriétaires de dons apparaîtront ici.
+                    Vos conversations apparaîtront ici.
                   </Text>
                 </View>
-              : filtres.map(resa => (
+              : filtres.map(conv => (
                 <TouchableOpacity
-                  key={resa.id}
+                  key={conv.id}
                   style={{ flexDirection: 'row', alignItems: 'center', padding: 14, paddingHorizontal: 16, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.bd }}
-                  onPress={() => resa.whatsapp && ouvrirWhatsApp(resa.whatsapp, resa.titre)}
+                  onPress={() => navigation.navigate('Conversation', { conversationId: conv.id })}
                 >
                   <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.bord, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: 'white' }}>{resa.prenom?.[0]}{resa.nom?.[0]}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: 'white' }}>{conv.autre_prenom?.[0]}{conv.autre_nom?.[0]}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt }}>{resa.prenom} {resa.nom}</Text>
-                    <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }} numberOfLines={1}>Don: {resa.titre}</Text>
-                    <Text style={{ fontSize: 11, color: theme.txt3, marginTop: 1 }}>{resa.quartier} · {resa.ville}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <View style={{ backgroundColor: '#25D366', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: 'white' }}>WhatsApp →</Text>
-                    </View>
-                    <Text style={{ fontSize: 10, color: theme.txt3, marginTop: 6 }}>
-                      {new Date(resa.cree_le).toLocaleDateString('fr-SN')}
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt }}>{conv.autre_prenom} {conv.autre_nom}</Text>
+                    <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }} numberOfLines={1}>
+                      {conv.dernier_message || 'Nouvelle conversation'}
                     </Text>
                   </View>
+                  {Number(conv.non_lus) > 0 && (
+                    <View style={{ backgroundColor: theme.gr, borderRadius: 20, minWidth: 22, height: 22, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 6 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: 'white' }}>{conv.non_lus}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))
             }

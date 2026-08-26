@@ -56,6 +56,15 @@ export default function DetailDonScreen({ route, navigation }) {
     }
   };
 
+  const handleContacter = async () => {
+    try {
+      const res = await api.post('/messages/demarrer', { entite_type: 'don', entite_id: donId });
+      navigation.navigate('Conversation', { conversationId: res.conversation.id });
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    }
+  };
+
   if (loading) return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }}>
       <ActivityIndicator size="large" color={theme.or} />
@@ -147,6 +156,17 @@ export default function DetailDonScreen({ route, navigation }) {
             </View>
             <Text style={{ fontSize: 12, color: theme.txt2 }}>{don?.quantite_dispo}/{don?.quantite_total} disponibles</Text>
           </View>
+
+          {/* CONTACTER */}
+          {!estProprio && (
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.card2, borderRadius: 12, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: theme.bd }}
+              onPress={handleContacter}
+            >
+              <Text style={{ fontSize: 16 }}>💬</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt }}>Contacter le propriétaire</Text>
+            </TouchableOpacity>
+          )}
 
           {/* PROPRIETAIRE */}
           <View style={{ marginBottom: 20 }}>

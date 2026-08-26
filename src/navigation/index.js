@@ -25,6 +25,7 @@ import NotificationsScreen   from '../screens/profil/NotificationsScreen';
 import ModifierProfilScreen  from '../screens/profil/ModifierProfilScreen';
 import ParametresScreen      from '../screens/profil/ParametresScreen';
 import MessagesScreen        from '../screens/profil/MessagesScreen';
+import ConversationScreen    from '../screens/profil/ConversationScreen';
 
 const Tab  = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -36,6 +37,7 @@ const AccueilStack = () => (
     <Stack.Screen name="DetailDon"     component={DetailDonScreen} />
     <Stack.Screen name="DetailEnchere" component={DetailEnchereScreen} />
     <Stack.Screen name="ProfilPublic"  component={ProfilPublicScreen} />
+    <Stack.Screen name="Conversation"  component={ConversationScreen} />
   </Stack.Navigator>
 );
 
@@ -44,6 +46,7 @@ const DonsStack = () => (
     <Stack.Screen name="ListeDons"  component={DonsScreen} />
     <Stack.Screen name="DetailDon"  component={DetailDonScreen} />
     <Stack.Screen name="ProfilPublic" component={ProfilPublicScreen} />
+    <Stack.Screen name="Conversation" component={ConversationScreen} />
   </Stack.Navigator>
 );
 
@@ -52,6 +55,7 @@ const EncheresStack = () => (
     <Stack.Screen name="ListeEncheres" component={EncheresScreen} />
     <Stack.Screen name="DetailEnchere" component={DetailEnchereScreen} />
     <Stack.Screen name="ProfilPublic"  component={ProfilPublicScreen} />
+    <Stack.Screen name="Conversation"  component={ConversationScreen} />
   </Stack.Navigator>
 );
 
@@ -67,6 +71,7 @@ const ProfilStack = () => (
     <Stack.Screen name="ModifierProfil"  component={ModifierProfilScreen} />
     <Stack.Screen name="Parametres"      component={ParametresScreen} />
     <Stack.Screen name="Messages"        component={MessagesScreen} />
+    <Stack.Screen name="Conversation"    component={ConversationScreen} />
   </Stack.Navigator>
 );
 
