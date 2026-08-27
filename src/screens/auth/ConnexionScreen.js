@@ -74,13 +74,19 @@ export default function ConnexionScreen({ navigation }) {
         }
       </TouchableOpacity>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
-        <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
-        <Text style={{ color: COLORS.light, fontSize: 12, marginHorizontal: 10 }}>ou</Text>
-        <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
-      </View>
-
-      <GoogleAuthButton />
+      {/* Google Sign-In temporairement masqué — nécessite un build EAS natif
+          (incompatible avec le proxy exp:// d'Expo Go). Réactiver une fois
+          les builds EAS Android/iOS disponibles. */}
+      {false && (
+        <>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
+            <Text style={{ color: COLORS.light, fontSize: 12, marginHorizontal: 10 }}>ou</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
+          </View>
+          <GoogleAuthButton />
+        </>
+      )}
 
       <TouchableOpacity onPress={() => navigation.navigate('Inscription')} style={{ marginTop: 16 }}>
         <Text style={styles.lien}>Pas de compte ? <Text style={{ color: COLORS.or }}>S'inscrire</Text></Text>

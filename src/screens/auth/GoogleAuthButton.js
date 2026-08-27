@@ -1,28 +1,44 @@
 import React, { useEffect } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Image, Alert } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
 
 WebBrowser.maybeCompleteAuthSession();
 
+// Client ID de type "Web application" dans Google Cloud Console
 const CLIENT_ID = '683213095101-nml5nlgedrhufdh7hqeiasepl0o01qdp.apps.googleusercontent.com';
+
+const discovery = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+};
+
+const redirectUri = AuthSession.makeRedirectUri();
+
+// Cette URL doit être ajoutée dans Google Cloud Console → Identifiants → ton Client ID Web → "URI de redirection autorisés"
+console.log('🔗 REDIRECT URI GOOGLE A AUTORISER :', redirectUri);
 
 export default function GoogleAuthButton() {
   const { connexionAvecGoogle } = useAuth();
   const [loading, setLoading] = React.useState(false);
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: CLIENT_ID,
-    iosClientId: CLIENT_ID,
-    androidClientId: CLIENT_ID,
-  });
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: CLIENT_ID,
+      scopes: ['openid', 'profile', 'email'],
+      redirectUri,
+      responseType: AuthSession.ResponseType.Token,
+    },
+    discovery
+  );
 
   useEffect(() => {
     if (response?.type === 'success') {
-      const { authentication } = response;
-      handleGoogleLogin(authentication.accessToken);
+      handleGoogleLogin(response.authentication.accessToken);
+    } else if (response?.type === 'error') {
+      Alert.alert('Erreur Google', response.error?.message || 'Connexion refusée.');
     }
   }, [response]);
 
