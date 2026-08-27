@@ -7,11 +7,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08', dark2: '#1A120E',
-  light: '#B0A090', bd: 'rgba(201,168,76,0.2)',
-};
+import { useTheme } from '../../context/ThemeContext';
 
 const API_URL = 'https://kollecta-backend.onrender.com/api';
 
@@ -39,6 +35,8 @@ const FORM_INITIAL = {
 };
 
 export default function PublierEnchereScreen({ navigation }) {
+  const { theme }  = useTheme();
+  const styles     = getStyles(theme);
   const [form,    setForm]    = useState(FORM_INITIAL);
   const [loading, setLoading] = useState(false);
 
@@ -147,7 +145,7 @@ export default function PublierEnchereScreen({ navigation }) {
   const dureeSelectionnee = DUREES.find(d => d.heures === form.duree);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.dark }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.backTxt}>← Retour</Text></TouchableOpacity>
@@ -186,8 +184,8 @@ export default function PublierEnchereScreen({ navigation }) {
                 ))}
                 {form.photos.length < 5 && (
                   <TouchableOpacity style={styles.photoAjouter} onPress={afficherChoix}>
-                    <Text style={{ fontSize: 26, color: COLORS.light }}>+</Text>
-                    <Text style={{ fontSize: 11, color: COLORS.light, marginTop: 4 }}>Ajouter</Text>
+                    <Text style={{ fontSize: 26, color: theme.txt2 }}>+</Text>
+                    <Text style={{ fontSize: 11, color: theme.txt2, marginTop: 4 }}>Ajouter</Text>
                   </TouchableOpacity>
                 )}
               </ScrollView>
@@ -199,7 +197,7 @@ export default function PublierEnchereScreen({ navigation }) {
             <Text style={styles.sectionTitre}>Informations *</Text>
 
             <Text style={styles.label}>Titre *</Text>
-            <TextInput style={styles.input} placeholder="Ex: Samsung Galaxy A54, Tableau original..." placeholderTextColor={COLORS.light} value={form.titre} onChangeText={v => update('titre', v)} />
+            <TextInput style={styles.input} placeholder="Ex: Samsung Galaxy A54, Tableau original..." placeholderTextColor={theme.txt3} value={form.titre} onChangeText={v => update('titre', v)} />
 
             <Text style={styles.label}>Catégorie</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 38, marginBottom: 4 }}>
@@ -211,7 +209,7 @@ export default function PublierEnchereScreen({ navigation }) {
             </ScrollView>
 
             <Text style={styles.label}>Description</Text>
-            <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} placeholder="État, caractéristiques, conditions de vente..." placeholderTextColor={COLORS.light} value={form.description} onChangeText={v => update('description', v)} multiline />
+            <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} placeholder="État, caractéristiques, conditions de vente..." placeholderTextColor={theme.txt3} value={form.description} onChangeText={v => update('description', v)} multiline />
           </View>
 
           {/* PRIX */}
@@ -221,7 +219,7 @@ export default function PublierEnchereScreen({ navigation }) {
               <TextInput
                 style={styles.prixInput}
                 placeholder="0"
-                placeholderTextColor={COLORS.light}
+                placeholderTextColor={theme.txt3}
                 value={form.prix_depart}
                 onChangeText={v => update('prix_depart', v.replace(/[^0-9]/g, ''))}
                 keyboardType="number-pad"
@@ -247,7 +245,7 @@ export default function PublierEnchereScreen({ navigation }) {
             </View>
             <View style={styles.dureeInfo}>
               <Text style={styles.dureeInfoTxt}>
-                ⏱ L'enchère se terminera dans <Text style={{ color: COLORS.or, fontWeight: '700' }}>{dureeSelectionnee?.label}</Text>
+                ⏱ L'enchère se terminera dans <Text style={{ color: theme.or, fontWeight: '700' }}>{dureeSelectionnee?.label}</Text>
               </Text>
             </View>
           </View>
@@ -256,9 +254,9 @@ export default function PublierEnchereScreen({ navigation }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Localisation *</Text>
             <Text style={styles.label}>Quartier *</Text>
-            <TextInput style={styles.input} placeholder="Ex: Plateau, Mermoz..." placeholderTextColor={COLORS.light} value={form.quartier} onChangeText={v => update('quartier', v)} />
+            <TextInput style={styles.input} placeholder="Ex: Plateau, Mermoz..." placeholderTextColor={theme.txt3} value={form.quartier} onChangeText={v => update('quartier', v)} />
             <Text style={styles.label}>Ville</Text>
-            <TextInput style={styles.input} placeholder="Dakar" placeholderTextColor={COLORS.light} value={form.ville} onChangeText={v => update('ville', v)} />
+            <TextInput style={styles.input} placeholder="Dakar" placeholderTextColor={theme.txt3} value={form.ville} onChangeText={v => update('ville', v)} />
           </View>
 
           {/* RECAP */}
@@ -271,7 +269,7 @@ export default function PublierEnchereScreen({ navigation }) {
               </View>
               <View style={styles.recapRow}>
                 <Text style={styles.recapLabel}>Prix de départ</Text>
-                <Text style={[styles.recapVal, { color: COLORS.bord, fontWeight: '800' }]}>{parseInt(form.prix_depart || 0).toLocaleString()} FCFA</Text>
+                <Text style={[styles.recapVal, { color: theme.bord, fontWeight: '800' }]}>{parseInt(form.prix_depart || 0).toLocaleString()} FCFA</Text>
               </View>
               <View style={styles.recapRow}>
                 <Text style={styles.recapLabel}>Durée</Text>
@@ -285,14 +283,14 @@ export default function PublierEnchereScreen({ navigation }) {
           )}
 
           <TouchableOpacity style={[styles.btnPublier, loading && { opacity: 0.7 }]} onPress={handlePublier} disabled={loading}>
-            {loading ? <ActivityIndicator color="#0E0A08" /> : <Text style={styles.btnPublierTxt}>🔨 Lancer l'enchère</Text>}
+            {loading ? <ActivityIndicator color={theme.isDark ? '#0E0A08' : '#FFFFFF'} /> : <Text style={styles.btnPublierTxt}>🔨 Lancer l'enchère</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={{ alignItems: 'center', padding: 12, marginTop: 8 }} onPress={reinitialiser}>
-            <Text style={{ fontSize: 13, color: COLORS.light, fontWeight: '600' }}>🗑️ Réinitialiser</Text>
+            <Text style={{ fontSize: 13, color: theme.txt2, fontWeight: '600' }}>🗑️ Réinitialiser</Text>
           </TouchableOpacity>
 
-          <Text style={{ textAlign: 'center', fontSize: 11, color: COLORS.light, marginTop: 8 }}>En publiant, vous acceptez les conditions Kollecta</Text>
+          <Text style={{ textAlign: 'center', fontSize: 11, color: theme.txt2, marginTop: 8 }}>En publiant, vous acceptez les conditions Kollecta</Text>
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -300,48 +298,48 @@ export default function PublierEnchereScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   header:        { padding: 20, paddingTop: 55 },
-  backTxt:       { color: COLORS.light, fontSize: 13, fontWeight: '600', marginBottom: 12 },
-  titre:         { fontSize: 24, fontWeight: '800', color: '#F0E8D8', marginBottom: 4 },
-  sous:          { fontSize: 13, color: COLORS.light },
+  backTxt:       { color: theme.txt2, fontSize: 13, fontWeight: '600', marginBottom: 12 },
+  titre:         { fontSize: 24, fontWeight: '800', color: theme.txt, marginBottom: 4 },
+  sous:          { fontSize: 13, color: theme.txt2 },
   body:          { padding: 16 },
-  section:       { backgroundColor: '#1E1612', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bd },
-  sectionTitre:  { fontSize: 12, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
+  section:       { backgroundColor: theme.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: theme.bd },
+  sectionTitre:  { fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
   photoHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  ajouterBtn:    { backgroundColor: 'rgba(201,168,76,0.15)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: COLORS.or },
-  ajouterBtnTxt: { fontSize: 12, fontWeight: '700', color: COLORS.or },
-  photoPlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2A1E18', borderRadius: 10, borderWidth: 2, borderColor: COLORS.bd, borderStyle: 'dashed' },
-  photoTxt:      { fontSize: 14, color: '#F0E8D8', fontWeight: '600' },
-  photoSous:     { fontSize: 11, color: COLORS.light, marginTop: 4 },
+  ajouterBtn:    { backgroundColor: theme.orl, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: theme.or },
+  ajouterBtnTxt: { fontSize: 12, fontWeight: '700', color: theme.or },
+  photoPlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, borderRadius: 10, borderWidth: 2, borderColor: theme.bd, borderStyle: 'dashed' },
+  photoTxt:      { fontSize: 14, color: theme.txt, fontWeight: '600' },
+  photoSous:     { fontSize: 11, color: theme.txt2, marginTop: 4 },
   photoWrap:     { position: 'relative', marginRight: 8 },
   photoImg:      { width: 110, height: 110, borderRadius: 10 },
   photoSuppr:    { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(0,0,0,0.7)', width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
-  photoPrinc:    { position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(201,168,76,0.9)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  photoProncTxt: { color: '#0E0A08', fontSize: 9, fontWeight: '700' },
-  photoAjouter:  { width: 110, height: 110, borderRadius: 10, backgroundColor: '#2A1E18', borderWidth: 2, borderColor: COLORS.bd, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  label:         { fontSize: 11, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 10 },
-  input:         { backgroundColor: '#0E0A08', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 10, padding: 12, fontSize: 14, color: '#F0E8D8' },
-  catPill:       { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd, marginRight: 7, backgroundColor: '#2A1E18' },
-  catPillAct:    { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  catTxt:        { fontSize: 12, fontWeight: '600', color: COLORS.light },
+  photoPrinc:    { position: 'absolute', bottom: 5, left: 5, backgroundColor: theme.or, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  photoProncTxt: { color: theme.isDark ? '#0E0A08' : '#FFFFFF', fontSize: 9, fontWeight: '700' },
+  photoAjouter:  { width: 110, height: 110, borderRadius: 10, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.bd, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
+  label:         { fontSize: 11, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 10 },
+  input:         { backgroundColor: theme.inp, borderWidth: 1, borderColor: theme.bd, borderRadius: 10, padding: 12, fontSize: 14, color: theme.txt },
+  catPill:       { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: theme.bd, marginRight: 7, backgroundColor: theme.card2 },
+  catPillAct:    { backgroundColor: theme.bord, borderColor: theme.bord },
+  catTxt:        { fontSize: 12, fontWeight: '600', color: theme.txt2 },
   catTxtAct:     { color: 'white' },
-  prixWrap:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0E0A08', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4 },
-  prixInput:     { flex: 1, fontSize: 28, fontWeight: '800', color: COLORS.or, padding: 8 },
-  prixSuffix:    { fontSize: 14, color: COLORS.light, fontWeight: '600' },
-  prixHint:      { fontSize: 11, color: COLORS.light, marginTop: 8 },
+  prixWrap:      { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.inp, borderWidth: 1, borderColor: theme.bd, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4 },
+  prixInput:     { flex: 1, fontSize: 28, fontWeight: '800', color: theme.or, padding: 8 },
+  prixSuffix:    { fontSize: 14, color: theme.txt2, fontWeight: '600' },
+  prixHint:      { fontSize: 11, color: theme.txt2, marginTop: 8 },
   dureeGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  dureeBtn:      { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd, backgroundColor: '#2A1E18' },
-  dureeBtnAct:   { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  dureeTxt:      { fontSize: 13, fontWeight: '600', color: COLORS.light },
+  dureeBtn:      { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1, borderColor: theme.bd, backgroundColor: theme.card2 },
+  dureeBtnAct:   { backgroundColor: theme.bord, borderColor: theme.bord },
+  dureeTxt:      { fontSize: 13, fontWeight: '600', color: theme.txt2 },
   dureeTxtAct:   { color: 'white' },
-  dureeInfo:     { marginTop: 12, backgroundColor: 'rgba(201,168,76,0.1)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: COLORS.bd },
-  dureeInfoTxt:  { fontSize: 12, color: COLORS.light },
-  recap:         { backgroundColor: '#1E1612', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: COLORS.or },
-  recapTitre:    { fontSize: 12, fontWeight: '700', color: COLORS.or, textTransform: 'uppercase', marginBottom: 10 },
+  dureeInfo:     { marginTop: 12, backgroundColor: theme.orl, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: theme.bd },
+  dureeInfoTxt:  { fontSize: 12, color: theme.txt2 },
+  recap:         { backgroundColor: theme.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: theme.or },
+  recapTitre:    { fontSize: 12, fontWeight: '700', color: theme.or, textTransform: 'uppercase', marginBottom: 10 },
   recapRow:      { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  recapLabel:    { fontSize: 12, color: COLORS.light },
-  recapVal:      { fontSize: 12, color: '#F0E8D8', fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
-  btnPublier:    { backgroundColor: COLORS.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
-  btnPublierTxt: { fontSize: 16, fontWeight: '800', color: '#0E0A08' },
+  recapLabel:    { fontSize: 12, color: theme.txt2 },
+  recapVal:      { fontSize: 12, color: theme.txt, fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
+  btnPublier:    { backgroundColor: theme.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
+  btnPublierTxt: { fontSize: 16, fontWeight: '800', color: theme.isDark ? '#0E0A08' : '#FFFFFF' },
 });

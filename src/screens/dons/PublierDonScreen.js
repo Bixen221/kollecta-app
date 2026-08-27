@@ -7,11 +7,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08', dark2: '#1A120E',
-  light: '#B0A090', bd: 'rgba(201,168,76,0.2)',
-};
+import { useTheme } from '../../context/ThemeContext';
 
 const API_URL = 'https://kollecta-backend.onrender.com/api';
 
@@ -33,6 +29,8 @@ const FORM_INITIAL = {
 };
 
 export default function PublierDonScreen({ navigation }) {
+  const { theme }  = useTheme();
+  const styles     = getStyles(theme);
   const [form,    setForm]    = useState(FORM_INITIAL);
   const [loading, setLoading] = useState(false);
 
@@ -134,7 +132,7 @@ export default function PublierDonScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: COLORS.dark }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.backTxt}>← Retour</Text></TouchableOpacity>
@@ -189,8 +187,8 @@ export default function PublierDonScreen({ navigation }) {
                 ))}
                 {form.photos.length < 5 && (
                   <TouchableOpacity style={styles.photoAjouter} onPress={afficherChoix}>
-                    <Text style={{ fontSize: 26, color: COLORS.light }}>+</Text>
-                    <Text style={{ fontSize: 11, color: COLORS.light, marginTop: 4 }}>Ajouter</Text>
+                    <Text style={{ fontSize: 26, color: theme.txt2 }}>+</Text>
+                    <Text style={{ fontSize: 11, color: theme.txt2, marginTop: 4 }}>Ajouter</Text>
                   </TouchableOpacity>
                 )}
               </ScrollView>
@@ -201,7 +199,7 @@ export default function PublierDonScreen({ navigation }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Informations *</Text>
             <Text style={styles.label}>Titre *</Text>
-            <TextInput style={styles.input} placeholder="Ex: Riz basmati 25 kg..." placeholderTextColor={COLORS.light} value={form.titre} onChangeText={v => update('titre', v)} />
+            <TextInput style={styles.input} placeholder="Ex: Riz basmati 25 kg..." placeholderTextColor={theme.txt3} value={form.titre} onChangeText={v => update('titre', v)} />
 
             <Text style={styles.label}>Catégorie</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 38, marginBottom: 4 }}>
@@ -213,17 +211,17 @@ export default function PublierDonScreen({ navigation }) {
             </ScrollView>
 
             <Text style={styles.label}>Description</Text>
-            <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} placeholder="Quantité, état, conditions..." placeholderTextColor={COLORS.light} value={form.description} onChangeText={v => update('description', v)} multiline />
+            <TextInput style={[styles.input, { height: 80, textAlignVertical: 'top' }]} placeholder="Quantité, état, conditions..." placeholderTextColor={theme.txt3} value={form.description} onChangeText={v => update('description', v)} multiline />
 
             <View style={{ flexDirection: 'row', marginTop: 4 }}>
               <View style={{ flex: 1, marginRight: 8 }}>
                 <Text style={styles.label}>Quantité</Text>
-                <TextInput style={styles.input} value={form.quantite} onChangeText={v => update('quantite', v)} keyboardType="number-pad" placeholderTextColor={COLORS.light} />
+                <TextInput style={styles.input} value={form.quantite} onChangeText={v => update('quantite', v)} keyboardType="number-pad" placeholderTextColor={theme.txt3} />
               </View>
               <View style={{ flex: 2 }}>
                 <Text style={styles.label}>Urgent ?</Text>
                 <TouchableOpacity style={[styles.urgentBtn, form.urgent && styles.urgentBtnAct]} onPress={() => update('urgent', !form.urgent)}>
-                  <Text style={[styles.urgentTxt, form.urgent && { color: '#FF6B6B' }]}>{form.urgent ? '🚨 Oui, urgent' : 'Non urgent'}</Text>
+                  <Text style={[styles.urgentTxt, form.urgent && { color: theme.bord }]}>{form.urgent ? '🚨 Oui, urgent' : 'Non urgent'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -233,20 +231,20 @@ export default function PublierDonScreen({ navigation }) {
           <View style={styles.section}>
             <Text style={styles.sectionTitre}>Localisation *</Text>
             <Text style={styles.label}>Quartier *</Text>
-            <TextInput style={styles.input} placeholder="Ex: Plateau, Mermoz..." placeholderTextColor={COLORS.light} value={form.quartier} onChangeText={v => update('quartier', v)} />
+            <TextInput style={styles.input} placeholder="Ex: Plateau, Mermoz..." placeholderTextColor={theme.txt3} value={form.quartier} onChangeText={v => update('quartier', v)} />
             <Text style={styles.label}>Ville</Text>
-            <TextInput style={styles.input} placeholder="Dakar" placeholderTextColor={COLORS.light} value={form.ville} onChangeText={v => update('ville', v)} />
+            <TextInput style={styles.input} placeholder="Dakar" placeholderTextColor={theme.txt3} value={form.ville} onChangeText={v => update('ville', v)} />
           </View>
 
           <TouchableOpacity style={[styles.btnPublier, loading && { opacity: 0.7 }]} onPress={handlePublier} disabled={loading}>
-            {loading ? <ActivityIndicator color="#0E0A08" /> : <Text style={styles.btnPublierTxt}>Publier le don ✓</Text>}
+            {loading ? <ActivityIndicator color={theme.isDark ? '#0E0A08' : '#FFFFFF'} /> : <Text style={styles.btnPublierTxt}>Publier le don ✓</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={{ alignItems: 'center', padding: 12, marginTop: 8 }} onPress={reinitialiser}>
-            <Text style={{ fontSize: 13, color: COLORS.light, fontWeight: '600' }}>🗑️ Réinitialiser le formulaire</Text>
+            <Text style={{ fontSize: 13, color: theme.txt2, fontWeight: '600' }}>🗑️ Réinitialiser le formulaire</Text>
           </TouchableOpacity>
 
-          <Text style={{ textAlign: 'center', fontSize: 11, color: COLORS.light, marginTop: 8 }}>En publiant, vous acceptez les conditions Kollecta</Text>
+          <Text style={{ textAlign: 'center', fontSize: 11, color: theme.txt2, marginTop: 8 }}>En publiant, vous acceptez les conditions Kollecta</Text>
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -254,41 +252,41 @@ export default function PublierDonScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   header:        { padding: 20, paddingTop: 55 },
-  backTxt:       { color: COLORS.light, fontSize: 13, fontWeight: '600', marginBottom: 12 },
-  titre:         { fontSize: 24, fontWeight: '800', color: '#F0E8D8', marginBottom: 4 },
-  sous:          { fontSize: 13, color: COLORS.light },
+  backTxt:       { color: theme.txt2, fontSize: 13, fontWeight: '600', marginBottom: 12 },
+  titre:         { fontSize: 24, fontWeight: '800', color: theme.txt, marginBottom: 4 },
+  sous:          { fontSize: 13, color: theme.txt2 },
   body:          { padding: 16 },
-  section:       { backgroundColor: '#1E1612', borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: COLORS.bd },
-  sectionTitre:  { fontSize: 12, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
+  section:       { backgroundColor: theme.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: theme.bd },
+  sectionTitre:  { fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
   typeRow:       { flexDirection: 'row', gap: 10 },
-  typeBtn:       { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center', backgroundColor: '#2A1E18', borderWidth: 1.5, borderColor: COLORS.bd },
-  typeBtnAct:    { borderColor: COLORS.or, backgroundColor: 'rgba(201,168,76,0.1)' },
+  typeBtn:       { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center', backgroundColor: theme.card2, borderWidth: 1.5, borderColor: theme.bd },
+  typeBtnAct:    { borderColor: theme.or, backgroundColor: theme.orl },
   typeEmoji:     { fontSize: 28, marginBottom: 6 },
-  typeTxt:       { fontSize: 13, fontWeight: '700', color: COLORS.light },
-  typeTxtAct:    { color: COLORS.or },
+  typeTxt:       { fontSize: 13, fontWeight: '700', color: theme.txt2 },
+  typeTxtAct:    { color: theme.or },
   photoHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  ajouterBtn:    { backgroundColor: 'rgba(201,168,76,0.15)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: COLORS.or },
-  ajouterBtnTxt: { fontSize: 12, fontWeight: '700', color: COLORS.or },
-  photoPlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2A1E18', borderRadius: 10, borderWidth: 2, borderColor: COLORS.bd, borderStyle: 'dashed' },
-  photoTxt:      { fontSize: 14, color: '#F0E8D8', fontWeight: '600' },
-  photoSous:     { fontSize: 11, color: COLORS.light, marginTop: 4 },
+  ajouterBtn:    { backgroundColor: theme.orl, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: theme.or },
+  ajouterBtnTxt: { fontSize: 12, fontWeight: '700', color: theme.or },
+  photoPlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.card2, borderRadius: 10, borderWidth: 2, borderColor: theme.bd, borderStyle: 'dashed' },
+  photoTxt:      { fontSize: 14, color: theme.txt, fontWeight: '600' },
+  photoSous:     { fontSize: 11, color: theme.txt2, marginTop: 4 },
   photoWrap:     { position: 'relative', marginRight: 8 },
   photoImg:      { width: 110, height: 110, borderRadius: 10 },
   photoSuppr:    { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(0,0,0,0.7)', width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
-  photoPrinc:    { position: 'absolute', bottom: 5, left: 5, backgroundColor: 'rgba(201,168,76,0.9)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  photoProncTxt: { color: '#0E0A08', fontSize: 9, fontWeight: '700' },
-  photoAjouter:  { width: 110, height: 110, borderRadius: 10, backgroundColor: '#2A1E18', borderWidth: 2, borderColor: COLORS.bd, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
-  label:         { fontSize: 11, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 10 },
-  input:         { backgroundColor: '#0E0A08', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 10, padding: 12, fontSize: 14, color: '#F0E8D8' },
-  catPill:       { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: COLORS.bd, marginRight: 7, backgroundColor: '#2A1E18' },
-  catPillAct:    { backgroundColor: COLORS.bord, borderColor: COLORS.bord },
-  catTxt:        { fontSize: 12, fontWeight: '600', color: COLORS.light },
+  photoPrinc:    { position: 'absolute', bottom: 5, left: 5, backgroundColor: theme.or, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  photoProncTxt: { color: theme.isDark ? '#0E0A08' : '#FFFFFF', fontSize: 9, fontWeight: '700' },
+  photoAjouter:  { width: 110, height: 110, borderRadius: 10, backgroundColor: theme.card2, borderWidth: 2, borderColor: theme.bd, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center' },
+  label:         { fontSize: 11, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 10 },
+  input:         { backgroundColor: theme.inp, borderWidth: 1, borderColor: theme.bd, borderRadius: 10, padding: 12, fontSize: 14, color: theme.txt },
+  catPill:       { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: theme.bd, marginRight: 7, backgroundColor: theme.card2 },
+  catPillAct:    { backgroundColor: theme.bord, borderColor: theme.bord },
+  catTxt:        { fontSize: 12, fontWeight: '600', color: theme.txt2 },
   catTxtAct:     { color: 'white' },
-  urgentBtn:     { backgroundColor: '#0E0A08', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 10, padding: 12, alignItems: 'center' },
-  urgentBtnAct:  { backgroundColor: 'rgba(204,34,34,0.15)', borderColor: '#CC2222' },
-  urgentTxt:     { fontSize: 13, color: COLORS.light, fontWeight: '600' },
-  btnPublier:    { backgroundColor: COLORS.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
-  btnPublierTxt: { fontSize: 16, fontWeight: '800', color: '#0E0A08' },
+  urgentBtn:     { backgroundColor: theme.inp, borderWidth: 1, borderColor: theme.bd, borderRadius: 10, padding: 12, alignItems: 'center' },
+  urgentBtnAct:  { backgroundColor: theme.bordl, borderColor: theme.bord },
+  urgentTxt:     { fontSize: 13, color: theme.txt2, fontWeight: '600' },
+  btnPublier:    { backgroundColor: theme.or, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
+  btnPublierTxt: { fontSize: 16, fontWeight: '800', color: theme.isDark ? '#0E0A08' : '#FFFFFF' },
 });
