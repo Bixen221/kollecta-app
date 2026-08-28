@@ -47,6 +47,17 @@ export default function NotificationsScreen({ navigation }) {
     } catch (err) { console.error(err); }
   };
 
+  const ouvrirNotif = (notif) => {
+    if (!notif.lu) marquerLu(notif.id);
+    if (!notif.entite_id) return;
+
+    if (notif.entite_type === 'don') {
+      navigation.navigate('DetailDon', { donId: notif.entite_id });
+    } else if (notif.entite_type === 'enchere') {
+      navigation.navigate('DetailEnchere', { enchereId: notif.entite_id });
+    }
+  };
+
   const marquerTousLus = async () => {
     try {
       await api.put('/notifications/lire-tout');
@@ -105,7 +116,7 @@ export default function NotificationsScreen({ navigation }) {
                       <Text style={{ fontSize: 10, fontWeight: '700', color: theme.txt3, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nouvelles</Text>
                     </View>
                     {notifs.filter(n => !n.lu).map(notif => (
-                      <NotifCard key={notif.id} notif={notif} theme={theme} onPress={() => marquerLu(notif.id)} />
+                      <NotifCard key={notif.id} notif={notif} theme={theme} onPress={() => ouvrirNotif(notif)} />
                     ))}
                   </>
                 )}
@@ -117,7 +128,7 @@ export default function NotificationsScreen({ navigation }) {
                       <Text style={{ fontSize: 10, fontWeight: '700', color: theme.txt3, textTransform: 'uppercase', letterSpacing: 0.5 }}>Précédentes</Text>
                     </View>
                     {notifs.filter(n => n.lu).map(notif => (
-                      <NotifCard key={notif.id} notif={notif} theme={theme} onPress={() => {}} />
+                      <NotifCard key={notif.id} notif={notif} theme={theme} onPress={() => ouvrirNotif(notif)} />
                     ))}
                   </>
                 )}
