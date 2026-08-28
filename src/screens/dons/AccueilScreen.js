@@ -4,11 +4,13 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useReservations } from '../../context/ReservationsContext';
+import { useNotifications } from '../../context/NotificationsContext';
 
 export default function AccueilScreen({ navigation }) {
   const { user }                          = useAuth();
   const { theme }                         = useTheme();
   const { estReserve }                    = useReservations();
+  const { nonLues }                       = useNotifications();
   const [dons,       setDons]             = useState([]);
   const [encheres,   setEncheres]         = useState([]);
   const [loading,    setLoading]          = useState(true);
@@ -58,6 +60,11 @@ export default function AccueilScreen({ navigation }) {
           <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}
 onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
   <Text style={{ fontSize: 18 }}>🔔</Text>
+  {nonLues > 0 && (
+    <View style={{ position: 'absolute', top: -2, right: -2, backgroundColor: theme.bord, borderRadius: 9, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: theme.hdr }}>
+      <Text style={{ fontSize: 9, fontWeight: '800', color: 'white' }}>{nonLues > 9 ? '9+' : nonLues}</Text>
+    </View>
+  )}
 </TouchableOpacity>
         </View>
 
@@ -197,7 +204,7 @@ const makeStyles = (theme) => StyleSheet.create({
   hdrRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   logo:          { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
   hdrSous:       { fontSize: 11, marginBottom: 2 },
-  notifBtn:      { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  notifBtn:      { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   srch:          { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 11, padding: 10, borderWidth: 1 },
   srchInput:     { flex: 1, fontSize: 13, fontFamily: 'System' },
   hero:          { margin: 16, borderRadius: 16, padding: 16, borderWidth: 1 },

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ReservationsProvider } from './src/context/ReservationsContext';
+import { NotificationsProvider } from './src/context/NotificationsContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import Navigation from './src/navigation';
 import { enregistrerPourNotifications } from './src/services/pushNotifications';
@@ -29,7 +30,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <ReservationsProvider>
-          <AppContent />
+          <NotificationsProvider>
+            <AppContent />
+          </NotificationsProvider>
         </ReservationsProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationsContext';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function ProfilScreen({ navigation }) {
   const { user, deconnexion } = useAuth();
+  const { nonLues } = useNotifications();
   const { theme, isDark, toggleTheme } = useTheme();
 
   const handleDeconnexion = () => {
@@ -96,6 +98,7 @@ export default function ProfilScreen({ navigation }) {
         titre="Notifications"
         sous="Vos alertes et mises à jour"
         onPress={() => navigation.navigate('Notifications')}
+        badge={nonLues > 0 ? nonLues : null}
       />
       <MenuItem ico="💬" titre="Messages" sous="Conversations actives" onPress={() => navigation.navigate('Messages')} />
 
