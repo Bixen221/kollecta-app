@@ -152,6 +152,9 @@ export default function DetailEnchereScreen({ route, navigation }) {
         </View>
 
         <View style={{ padding: 20 }}>
+          {enchere?.numero && (
+            <Text style={{ fontSize: 11, fontWeight: '700', color: theme.txt3, marginBottom: 4 }}>ID: #{String(enchere.numero).padStart(5, '0')}</Text>
+          )}
           <Text style={{ fontSize: 22, fontWeight: '800', color: theme.txt, marginBottom: 6 }}>{enchere?.titre}</Text>
           <Text style={{ fontSize: 13, color: theme.txt2, marginBottom: 16 }}>📍 {enchere?.quartier}, {enchere?.ville}</Text>
 
