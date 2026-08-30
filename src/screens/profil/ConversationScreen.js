@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  ActivityIndicator, KeyboardAvoidingView, Platform
+  ActivityIndicator, KeyboardAvoidingView, Platform, Linking, Alert
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,7 @@ export default function ConversationScreen({ route, navigation }) {
   const { theme } = useTheme();
   const { user }  = useAuth();
   const [messages, setMessages] = useState([]);
+  const [conversation, setConversation] = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [texte,    setTexte]    = useState('');
   const [envoi,    setEnvoi]    = useState(false);
@@ -21,8 +22,15 @@ export default function ConversationScreen({ route, navigation }) {
     try {
       const res = await api.get('/messages/conversations/'+conversationId);
       setMessages(res.messages || []);
+      setConversation(res.conversation);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
+  };
+
+  const ouvrirWhatsApp = () => {
+    const numero = conversation?.autre_whatsapp?.replace(/\D/g, '');
+    if (!numero) return;
+    Linking.openURL('https://wa.me/'+numero).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir WhatsApp"));
   };
 
   useEffect(() => {
@@ -62,7 +70,25 @@ export default function ConversationScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
           <Text style={{ fontSize: 20, color: theme.txt }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: theme.txt }}>Conversation</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: theme.txt }} numberOfLines={1}>
+            {conversation?.autre_prenom} {conversation?.autre_nom}
+          </Text>
+          {conversation?.entite_titre && (
+            <Text style={{ fontSize: 11, color: theme.or }} numberOfLines={1}>
+              {conversation.entite_type === 'don' ? '🎁' : '🔨'} {conversation.entite_titre}
+              {conversation.entite_numero ? ' · ID: #'+String(conversation.entite_numero).padStart(5, '0') : ''}
+            </Text>
+          )}
+        </View>
+        {conversation?.autre_whatsapp && (
+          <TouchableOpacity
+            onPress={ouvrirWhatsApp}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#25D366', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20 }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '700', color: 'white' }}>WhatsApp</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
