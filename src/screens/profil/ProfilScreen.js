@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Switch, Image } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationsContext';
+import { useMessages } from '../../context/MessagesContext';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function ProfilScreen({ navigation }) {
   const { user, deconnexion } = useAuth();
   const { nonLues } = useNotifications();
+  const { nonLus: messagesNonLus } = useMessages();
   const { theme, isDark, toggleTheme } = useTheme();
 
   const handleDeconnexion = () => {
@@ -100,7 +102,7 @@ export default function ProfilScreen({ navigation }) {
         onPress={() => navigation.navigate('Notifications')}
         badge={nonLues > 0 ? nonLues : null}
       />
-      <MenuItem ico="💬" titre="Messages" sous="Conversations actives" onPress={() => navigation.navigate('Messages')} />
+      <MenuItem ico="💬" titre="Messages" sous="Conversations actives" onPress={() => navigation.navigate('Messages')} badge={messagesNonLus > 0 ? messagesNonLus : null} />
 
       {/* COMPTE */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.bg, marginTop: 8 }}>
