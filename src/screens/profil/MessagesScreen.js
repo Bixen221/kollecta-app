@@ -79,6 +79,12 @@ export default function MessagesScreen({ navigation }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt }}>{conv.autre_prenom} {conv.autre_nom}</Text>
+                    {conv.entite_titre && (
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: theme.or, marginTop: 1 }} numberOfLines={1}>
+                        {conv.entite_type === 'don' ? '🎁' : '🔨'} {conv.entite_titre}
+                        {conv.entite_numero ? ' · ID: #'+String(conv.entite_numero).padStart(5, '0') : ''}
+                      </Text>
+                    )}
                     <Text style={{ fontSize: 12, color: theme.txt2, marginTop: 2 }} numberOfLines={1}>
                       {conv.dernier_message || 'Nouvelle conversation'}
                     </Text>
