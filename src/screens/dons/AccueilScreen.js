@@ -5,12 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useReservations } from '../../context/ReservationsContext';
 import { useNotifications } from '../../context/NotificationsContext';
+import { useMessages } from '../../context/MessagesContext';
 
 export default function AccueilScreen({ navigation }) {
   const { user }                          = useAuth();
   const { theme }                         = useTheme();
   const { estReserve }                    = useReservations();
   const { nonLues }                       = useNotifications();
+  const { nonLus: messagesNonLus }         = useMessages();
   const [dons,       setDons]             = useState([]);
   const [encheres,   setEncheres]         = useState([]);
   const [loading,    setLoading]          = useState(true);
@@ -57,15 +59,26 @@ export default function AccueilScreen({ navigation }) {
             <Text style={[s.hdrSous, { color: theme.txt2 }]}>📍 Dakar, Sénégal</Text>
             <Text style={[s.logo, { color: theme.or }]}>KOLLECTA</Text>
           </View>
-          <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}
-onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
-  <Text style={{ fontSize: 18 }}>🔔</Text>
-  {nonLues > 0 && (
-    <View style={{ position: 'absolute', top: -2, right: -2, backgroundColor: theme.bord, borderRadius: 9, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: theme.hdr }}>
-      <Text style={{ fontSize: 9, fontWeight: '800', color: 'white' }}>{nonLues > 9 ? '9+' : nonLues}</Text>
-    </View>
-  )}
-</TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}
+  onPress={() => navigation.navigate('Profil', { screen: 'Messages' })}>
+    <Text style={{ fontSize: 18 }}>💬</Text>
+    {messagesNonLus > 0 && (
+      <View style={{ position: 'absolute', top: -2, right: -2, backgroundColor: theme.bord, borderRadius: 9, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: theme.hdr }}>
+        <Text style={{ fontSize: 9, fontWeight: '800', color: 'white' }}>{messagesNonLus > 9 ? '9+' : messagesNonLus}</Text>
+      </View>
+    )}
+  </TouchableOpacity>
+            <TouchableOpacity style={[s.notifBtn, { backgroundColor: theme.orl }]}
+  onPress={() => navigation.navigate('Profil', { screen: 'Notifications' })}>
+    <Text style={{ fontSize: 18 }}>🔔</Text>
+    {nonLues > 0 && (
+      <View style={{ position: 'absolute', top: -2, right: -2, backgroundColor: theme.bord, borderRadius: 9, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: theme.hdr }}>
+        <Text style={{ fontSize: 9, fontWeight: '800', color: 'white' }}>{nonLues > 9 ? '9+' : nonLues}</Text>
+      </View>
+    )}
+  </TouchableOpacity>
+          </View>
         </View>
 
         {/* BARRE DE RECHERCHE */}
