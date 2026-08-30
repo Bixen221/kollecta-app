@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import GoogleAuthButton from './GoogleAuthButton';
-
-const COLORS = {
-  or: '#C9A84C', bord: '#8B1A2A', dark: '#0E0A08', dark2: '#1A120E',
-  light: '#B0A090', card: '#1E1612', bd: 'rgba(201,168,76,0.2)',
-};
 
 export default function ConnexionScreen({ navigation }) {
   const { connexion } = useAuth();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [whatsapp,  setWhatsapp]  = useState('');
   const [password,  setPassword]  = useState('');
   const [loading,   setLoading]   = useState(false);
@@ -42,7 +40,7 @@ export default function ConnexionScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="7X XXX XX XX"
-            placeholderTextColor={COLORS.light}
+            placeholderTextColor={theme.txt3}
             value={whatsapp}
             onChangeText={setWhatsapp}
             keyboardType="phone-pad"
@@ -56,20 +54,20 @@ export default function ConnexionScreen({ navigation }) {
           <TextInput
             style={[styles.input, { flex: 1 }]}
             placeholder="Votre mot de passe"
-            placeholderTextColor={COLORS.light}
+            placeholderTextColor={theme.txt3}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPass}
           />
           <TouchableOpacity onPress={() => setShowPass(!showPass)}>
-            <Text style={{ color: COLORS.light, fontSize: 18 }}>{showPass ? '🙈' : '👁'}</Text>
+            <Text style={{ color: theme.txt3, fontSize: 18 }}>{showPass ? '🙈' : '👁'}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <TouchableOpacity style={styles.btnPrimary} onPress={handleConnexion} disabled={loading}>
         {loading
-          ? <ActivityIndicator color={COLORS.dark} />
+          ? <ActivityIndicator color={theme.bg} />
           : <Text style={styles.btnTxt}>Se connecter →</Text>
         }
       </TouchableOpacity>
@@ -80,32 +78,32 @@ export default function ConnexionScreen({ navigation }) {
       {false && (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
-            <Text style={{ color: COLORS.light, fontSize: 12, marginHorizontal: 10 }}>ou</Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: COLORS.bd }} />
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.bd }} />
+            <Text style={{ color: theme.txt3, fontSize: 12, marginHorizontal: 10 }}>ou</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.bd }} />
           </View>
           <GoogleAuthButton />
         </>
       )}
 
       <TouchableOpacity onPress={() => navigation.navigate('Inscription')} style={{ marginTop: 16 }}>
-        <Text style={styles.lien}>Pas de compte ? <Text style={{ color: COLORS.or }}>S'inscrire</Text></Text>
+        <Text style={styles.lien}>Pas de compte ? <Text style={{ color: theme.or }}>S'inscrire</Text></Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#0E0A08', padding: 24, justifyContent: 'center' },
+const getStyles = (theme) => StyleSheet.create({
+  container:  { flex: 1, backgroundColor: theme.bg, padding: 24, justifyContent: 'center' },
   logo:       { fontSize: 28, fontWeight: '800', color: '#C9A84C', textAlign: 'center', marginBottom: 24, letterSpacing: 3 },
-  titre:      { fontSize: 22, fontWeight: '800', color: '#F0E8D8', marginBottom: 4 },
-  sous:       { fontSize: 13, color: COLORS.light, marginBottom: 28 },
+  titre:      { fontSize: 22, fontWeight: '800', color: theme.txt, marginBottom: 4 },
+  sous:       { fontSize: 13, color: theme.txt3, marginBottom: 28 },
   inputWrap:  { marginBottom: 16 },
-  label:      { fontSize: 11, fontWeight: '700', color: COLORS.light, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  inputRow:   { flexDirection: 'row', alignItems: 'center', backgroundColor: '#160E0A', borderWidth: 1, borderColor: COLORS.bd, borderRadius: 11, paddingHorizontal: 14, paddingVertical: 12 },
-  prefix:     { fontSize: 13, color: '#F0E8D8', marginRight: 8 },
-  input:      { fontSize: 14, color: '#F0E8D8', flex: 1 },
+  label:      { fontSize: 11, fontWeight: '700', color: theme.txt3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+  inputRow:   { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.inp, borderWidth: 1, borderColor: theme.bd, borderRadius: 11, paddingHorizontal: 14, paddingVertical: 12 },
+  prefix:     { fontSize: 13, color: theme.txt, marginRight: 8 },
+  input:      { fontSize: 14, color: theme.txt, flex: 1 },
   btnPrimary: { backgroundColor: '#8B1A2A', borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 8, marginBottom: 16 },
   btnTxt:     { fontSize: 15, fontWeight: '700', color: 'white' },
-  lien:       { textAlign: 'center', fontSize: 13, color: COLORS.light },
+  lien:       { textAlign: 'center', fontSize: 13, color: theme.txt3 },
 });
