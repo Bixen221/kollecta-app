@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, Modal
+  ActivityIndicator, Alert, Modal, Linking
 } from 'react-native';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +17,8 @@ export default function DetailDonScreen({ route, navigation }) {
   const [reserving,   setReserving]   = useState(false);
   const [showModal,   setShowModal]   = useState(false);
   const [dejaReserve, setDejaReserve] = useState(false);
+  const [candidats,   setCandidats]   = useState([]);
+  const [choixEnCours, setChoixEnCours] = useState(null);
 
   useEffect(() => { charger(); }, []);
 
@@ -32,6 +34,13 @@ export default function DetailDonScreen({ route, navigation }) {
           );
           setDejaReserve(dejaFait);
         } catch (e) {}
+
+        if (res.don.proprietaire_id === user.id) {
+          try {
+            const resCandidats = await api.get('/dons/'+donId+'/candidats');
+            setCandidats(resCandidats.candidats || []);
+          } catch (e) {}
+        }
       }
     } catch (err) {
       Alert.alert('Erreur', err.message);
@@ -47,7 +56,7 @@ export default function DetailDonScreen({ route, navigation }) {
       await api.post('/dons/'+donId+'/reserver');
       setDejaReserve(true);
       setShowModal(false);
-      Alert.alert('✅ Réservation confirmée !', 'Le propriétaire vous contactera sur WhatsApp dans les 48h.', [{ text: 'OK' }]);
+      Alert.alert('✅ Demande envoyée !', "Le propriétaire vous contactera s'il vous choisit.", [{ text: 'OK' }]);
       charger();
     } catch (err) {
       Alert.alert('Erreur', err.message);
@@ -65,6 +74,41 @@ export default function DetailDonScreen({ route, navigation }) {
     }
   };
 
+  const handleContacterCandidat = async (demandeurId) => {
+    try {
+      const res = await api.post('/messages/demarrer', { entite_type: 'don', entite_id: donId, demandeur_id: demandeurId });
+      navigation.navigate('Conversation', { conversationId: res.conversation.id });
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    }
+  };
+
+  const handleChoisir = (reservationId) => {
+    Alert.alert(
+      'Confirmer ce choix ?',
+      "Les autres candidats en attente seront automatiquement refusés si c'était la dernière disponibilité.",
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Confirmer', onPress: async () => {
+          setChoixEnCours(reservationId);
+          try {
+            await api.post('/dons/reservations/'+reservationId+'/choisir');
+            await charger();
+          } catch (err) {
+            Alert.alert('Erreur', err.message);
+          } finally {
+            setChoixEnCours(null);
+          }
+        }},
+      ]
+    );
+  };
+
+  const ouvrirWhatsApp = (whatsapp) => {
+    const numero = whatsapp?.replace(/\D/g, '');
+    Linking.openURL('https://wa.me/'+numero).catch(() => Alert.alert('Erreur', "Impossible d'ouvrir WhatsApp"));
+  };
+
   if (loading) return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }}>
       <ActivityIndicator size="large" color={theme.or} />
@@ -78,7 +122,7 @@ export default function DetailDonScreen({ route, navigation }) {
 
   const getBoutonEtat = () => {
     if (estProprio)  return { label: 'Votre annonce',   disabled: true,  bg: theme.txt3 };
-    if (dejaReserve) return { label: '✓ Déjà réservé',  disabled: true,  bg: theme.gr };
+    if (dejaReserve) return { label: '✓ Demande envoyée', disabled: true,  bg: theme.gr };
     if (plusDispo)   return { label: 'Plus disponible', disabled: true,  bg: theme.txt3 };
     return { label: 'Réserver ce don', disabled: false, bg: theme.bord };
   };
@@ -103,12 +147,16 @@ export default function DetailDonScreen({ route, navigation }) {
           </TouchableOpacity>
           {dejaReserve && (
             <View style={{ position: 'absolute', bottom: 12, right: 16, backgroundColor: 'rgba(45,122,79,0.9)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
-              <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>✓ Réservé par vous</Text>
+              <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>✓ Demande envoyée</Text>
             </View>
           )}
         </View>
 
         <View style={{ padding: 20 }}>
+          {don?.numero && (
+            <Text style={{ fontSize: 11, fontWeight: '700', color: theme.txt3, marginBottom: 4 }}>ID: #{String(don.numero).padStart(5, '0')}</Text>
+          )}
+
           {/* TAGS */}
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
             <View style={{ backgroundColor: theme.orl, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
@@ -121,7 +169,7 @@ export default function DetailDonScreen({ route, navigation }) {
             )}
             {dejaReserve && (
               <View style={{ backgroundColor: theme.grl, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: theme.gr }}>✓ Réservé</Text>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: theme.gr }}>✓ Demande envoyée</Text>
               </View>
             )}
           </View>
@@ -134,8 +182,8 @@ export default function DetailDonScreen({ route, navigation }) {
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: theme.grl, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: theme.gr }}>
               <Text style={{ fontSize: 20 }}>⏳</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: theme.gr, marginBottom: 3 }}>Réservation en cours</Text>
-                <Text style={{ fontSize: 12, color: theme.txt2, lineHeight: 18 }}>Le propriétaire vous contactera sur WhatsApp dans les 48h.</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: theme.gr, marginBottom: 3 }}>Demande envoyée</Text>
+                <Text style={{ fontSize: 12, color: theme.txt2, lineHeight: 18 }}>Le propriétaire vous contactera s'il vous choisit.</Text>
               </View>
             </View>
           )}
@@ -166,6 +214,82 @@ export default function DetailDonScreen({ route, navigation }) {
               <Text style={{ fontSize: 16 }}>💬</Text>
               <Text style={{ fontSize: 14, fontWeight: '700', color: theme.txt }}>Contacter le propriétaire</Text>
             </TouchableOpacity>
+          )}
+
+          {/* CANDIDATS (proprio uniquement) */}
+          {estProprio && candidats.length > 0 && (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: theme.txt2, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+                Candidats ({candidats.length})
+              </Text>
+              {candidats.map((c) => {
+                const choisi = ['contacte', 'confirme_proprio', 'confirme_demandeur', 'cloture'].includes(c.statut);
+                const refuse = c.statut === 'refuse';
+                return (
+                  <View
+                    key={c.id}
+                    style={{
+                      borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1,
+                      backgroundColor: choisi ? theme.grl : refuse ? theme.card2 : theme.card,
+                      borderColor: choisi ? theme.gr : theme.bd,
+                      opacity: refuse ? 0.6 : 1,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.bord, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: 'white' }}>{c.prenom?.[0]}{c.nom?.[0]}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: theme.txt }}>{c.prenom} {c.nom}</Text>
+                        <Text style={{ fontSize: 11, color: theme.txt2 }}>{c.quartier}, {c.ville}</Text>
+                      </View>
+                      <Text style={{ fontSize: 10, color: theme.txt3 }}>
+                        {new Date(c.cree_le).toLocaleDateString('fr-SN')}
+                      </Text>
+                    </View>
+                    {choisi ? (
+                      <View>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: theme.gr, textAlign: 'center', marginBottom: 8 }}>✓ Choisi</Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity
+                            style={{ flex: 1, borderRadius: 8, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.bd }}
+                            onPress={() => handleContacterCandidat(c.demandeur_id)}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '700', color: theme.txt }}>💬 Message</Text>
+                          </TouchableOpacity>
+                          {c.whatsapp && (
+                            <TouchableOpacity
+                              style={{ flex: 1, borderRadius: 8, padding: 8, alignItems: 'center', backgroundColor: '#25D366' }}
+                              onPress={() => ouvrirWhatsApp(c.whatsapp)}
+                            >
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: 'white' }}>WhatsApp</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    ) : refuse ? (
+                      <Text style={{ fontSize: 11, fontWeight: '600', color: theme.txt3, textAlign: 'center' }}>Non retenu</Text>
+                    ) : (
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          style={{ flex: 1, borderRadius: 8, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.bd }}
+                          onPress={() => handleContacterCandidat(c.demandeur_id)}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: theme.txt }}>💬 Message</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{ flex: 1, borderRadius: 8, padding: 8, alignItems: 'center', backgroundColor: theme.bord, opacity: choixEnCours === c.id ? 0.6 : 1 }}
+                          onPress={() => handleChoisir(c.id)}
+                          disabled={choixEnCours === c.id || don.quantite_dispo <= 0}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: 'white' }}>{choixEnCours === c.id ? '...' : 'Choisir'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
           )}
 
           {/* PROPRIETAIRE */}
@@ -227,9 +351,9 @@ export default function DetailDonScreen({ route, navigation }) {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
           <View style={{ backgroundColor: theme.card, borderRadius: 24, padding: 20, paddingBottom: 36 }}>
             <View style={{ width: 36, height: 4, backgroundColor: theme.bd, borderRadius: 2, alignSelf: 'center', marginBottom: 16 }} />
-            <Text style={{ fontSize: 18, fontWeight: '800', color: theme.txt, marginBottom: 8 }}>Confirmer la réservation</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: theme.txt, marginBottom: 8 }}>Confirmer la demande</Text>
             <Text style={{ fontSize: 13, color: theme.txt2, marginBottom: 16, lineHeight: 20 }}>
-              Le propriétaire sera notifié et vous contactera sur WhatsApp dans les <Text style={{ color: theme.or, fontWeight: '700' }}>48h</Text>.
+              Le propriétaire sera notifié de votre candidature et pourra vous choisir parmi les demandeurs.
             </Text>
             <View style={{ backgroundColor: theme.card2, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: theme.bd }}>
               <Text style={{ fontSize: 14, color: theme.txt, marginBottom: 4 }}>{don?.type === 'nourriture' ? '🍱' : '📦'} <Text style={{ fontWeight: '700' }}>{don?.titre}</Text></Text>
@@ -249,7 +373,7 @@ export default function DetailDonScreen({ route, navigation }) {
               >
                 {reserving
                   ? <ActivityIndicator color="white" />
-                  : <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>✓ Confirmer</Text>
+                  : <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>✓ Envoyer la demande</Text>
                 }
               </TouchableOpacity>
             </View>
