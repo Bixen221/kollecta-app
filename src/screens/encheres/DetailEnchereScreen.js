@@ -19,9 +19,9 @@ const getTempsRestant = (fin_le) => {
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
-  if (h > 24) return { texte: Math.floor(h/24)+'j '+h%24+'h', urgent: false };
-  if (h > 1)  return { texte: h+'h '+m+'m', urgent: false };
-  return { texte: h+'h '+m+'m '+s+'s', urgent: true };
+  if (h > 24) return { texte: Math.floor(h/24)+'j '+(h%24)+'h', urgent: false };
+  if (h >= 1) return { texte: h+'h '+m+'m', urgent: false };
+  return { texte: m+'m '+s+'s', urgent: true };
 };
 
 export default function DetailEnchereScreen({ route, navigation }) {
