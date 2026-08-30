@@ -16,10 +16,10 @@ export default function DonsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [filtre,     setFiltre]     = useState('Tout');
   const [recherche,  setRecherche]  = useState('');
-  const [vue,        setVue]        = useState('liste'); // 'liste' ou 'grille'
+  const [vue,        setVue]        = useState('grille'); // 'liste' ou 'grille'
   const { estReserve, getReservation, charger: rechargerResas } = useReservations();
 
-  const filtres = ['Tout', 'Nourriture', 'Matériels', 'Urgent'];
+  const filtres = ['Tout', 'Nourriture', 'Matériels', 'Urgent', 'Réservés'];
 
   const charger = async () => {
     try {
@@ -51,11 +51,13 @@ export default function DonsScreen({ navigation }) {
     ]);
   };
 
-  const donsFiltres = dons.filter(d =>
-    d.titre?.toLowerCase().includes(recherche.toLowerCase()) ||
-    d.quartier?.toLowerCase().includes(recherche.toLowerCase()) ||
-    d.categorie?.toLowerCase().includes(recherche.toLowerCase())
-  );
+  const donsFiltres = dons
+    .filter(d => filtre === 'Réservés' ? estReserve(d.id) : !estReserve(d.id))
+    .filter(d =>
+      d.titre?.toLowerCase().includes(recherche.toLowerCase()) ||
+      d.quartier?.toLowerCase().includes(recherche.toLowerCase()) ||
+      d.categorie?.toLowerCase().includes(recherche.toLowerCase())
+    );
 
   const CarteListe = ({ don }) => {
     const reserve = estReserve(don.id);
@@ -91,7 +93,7 @@ export default function DonsScreen({ navigation }) {
                 style={{ backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: '#FF6B6B' }}
                 onPress={() => handleAnnulerReservation(don.id)}
               >
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: 'white' }}>Annuler</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -139,7 +141,7 @@ export default function DonsScreen({ navigation }) {
               style={{ backgroundColor: '#3A1A1A', borderRadius: 7, paddingVertical: 6, alignItems: 'center', borderWidth: 1, borderColor: '#FF6B6B' }}
               onPress={() => handleAnnulerReservation(don.id)}
             >
-              <Text style={{ fontSize: 10, fontWeight: '700', color: '#FF6B6B' }}>Annuler</Text>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: 'white' }}>Annuler</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity

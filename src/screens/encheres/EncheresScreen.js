@@ -24,7 +24,7 @@ export default function EncheresScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [filtre,     setFiltre]     = useState('Tout');
   const [recherche,  setRecherche]  = useState('');
-  const [vue,        setVue]        = useState('liste');
+  const [vue,        setVue]        = useState('grille');
 
   const filtres = ['Tout', 'En cours', 'À venir', 'Terminées'];
 
